@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # HealthKonnect - Telemedicine MVP
 
 A comprehensive telemedicine platform built with MERN stack + TypeScript, featuring Clerk authentication, real-time messaging, and mobile-first design optimized for Kenya/East Africa.
@@ -459,3 +460,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **HealthKonnect** - Connecting patients and healthcare providers through technology.
+=======
+# HealthKonnect
+A telemedicine application that supports human healthcare in different parts of the country.
+>>>>>>> fb31a32e8ff8160a8f24398a3f110253e201886a
