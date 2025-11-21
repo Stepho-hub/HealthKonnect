@@ -1,6 +1,16 @@
 # HealthKonnect - Telemedicine MVP
 
+[![Frontend Deployment](https://img.shields.io/badge/Frontend-Vercel-000000?style=flat&logo=vercel)](https://health-konnect-jdae.vercel.app/)
+[![Backend Deployment](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat&logo=render)](https://healthkonnect.onrender.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A comprehensive telemedicine platform built with MERN stack + TypeScript, featuring Clerk authentication, real-time messaging, and mobile-first design optimized for Kenya/East Africa.
+
+## 🌐 Live Demo
+
+- **Frontend**: [https://health-konnect-jdae.vercel.app/](https://health-konnect-jdae.vercel.app/)
+- **Backend API**: [https://healthkonnect.onrender.com](https://healthkonnect.onrender.com)
+- **API Health Check**: [https://healthkonnect.onrender.com/api/health](https://healthkonnect.onrender.com/api/health)
 
 ## 🏗️ Project Structure
 
@@ -222,6 +232,8 @@ VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key_here
 VITE_DEMO_MODE=false
 
 # API Configuration
+# For development: http://localhost:5001
+# For production: https://healthkonnect.onrender.com
 VITE_API_URL=http://localhost:5001
 
 # Optional - External Services
@@ -303,6 +315,11 @@ npm run mock-test
 
 ## 🚀 Deployment Guide
 
+### Current Deployments
+
+- **Frontend**: Deployed on Vercel at [https://health-konnect-jdae.vercel.app/](https://health-konnect-jdae.vercel.app/)
+- **Backend**: Deployed on Render at [https://healthkonnect.onrender.com](https://healthkonnect.onrender.com)
+
 ### Production Environment Setup
 
 #### Required API Keys for Production:
@@ -331,6 +348,55 @@ npm run mock-test
 - **AWS S3** for file storage
 - **OpenAI** for AI features
 - **Google Maps** for location services
+
+### Vercel Frontend Deployment
+
+1. **Connect Repository**: Link your GitHub repo to Vercel
+2. **Build Settings**:
+   - **Framework Preset**: Vite
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+   - **Install Command**: `npm install`
+3. **Environment Variables**:
+   - `NODE_VERSION`: `18`
+   - `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key
+   - `VITE_API_URL`: `https://healthkonnect.onrender.com`
+   - `VITE_DEMO_MODE`: `false`
+4. **Deploy**: Vercel will auto-deploy on git push
+
+### Render Backend Deployment
+
+1. **Connect Repository**: Link your GitHub repo to Render
+2. **Service Type**: Web Service
+3. **Build Settings**:
+   - **Root Directory**: `backend`
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+4. **Environment Variables**:
+   - `MONGODB_URI`: Your MongoDB connection string
+   - `CLERK_SECRET_KEY`: Your Clerk secret key
+   - `NODE_ENV`: `production`
+   - `PORT`: `10000` (Render default)
+   - `FRONTEND_URL`: `https://health-konnect-jdae.vercel.app`
+5. **Deploy**: Render will build and deploy automatically
+
+### Troubleshooting Common Issues
+
+#### Vercel Build Failures
+- **Rollup Module Error**: If you encounter `@rollup/rollup-linux-x64-gnu` errors, the `vercel.json` is configured to use Node 18 and force rollup installation.
+- **Dependency Issues**: Frontend uses `--legacy-peer-deps` for compatibility.
+- **Build Directory**: Ensure Vercel is set to build from `frontend/` directory.
+
+#### Backend Deployment Issues
+- **Port Configuration**: Render uses port 10000 by default; ensure `PORT=10000` in environment.
+- **MongoDB Connection**: Verify MongoDB Atlas allows connections from Render's IP ranges.
+- **CORS**: Backend is configured to allow requests from the Vercel frontend URL.
+
+#### Local Development
+- **Port Conflicts**: Ensure ports 5001 (backend) and 5173 (frontend dev) are available.
+- **Environment Variables**: Copy `.env.example` files and fill in required keys.
+- **Dependencies**: Run `npm run install:all` to install all dependencies.
 
 ### Docker Deployment
 
