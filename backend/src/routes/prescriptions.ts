@@ -133,11 +133,11 @@ router.get('/:id/pdf', async (req: Request, res: Response) => {
     doc.moveDown();
 
     doc.fontSize(16).text('Patient Information:');
-    doc.fontSize(12).text(`Name: ${prescription.patient.name}`);
+    doc.fontSize(12).text(`Name: ${(prescription.patient as any).name}`);
     doc.moveDown();
 
     doc.fontSize(16).text('Doctor Information:');
-    doc.fontSize(12).text(`Name: Dr. ${prescription.doctor.name}`);
+    doc.fontSize(12).text(`Name: Dr. ${(prescription.doctor as any).name}`);
     doc.moveDown();
 
     doc.fontSize(16).text('Medications:');

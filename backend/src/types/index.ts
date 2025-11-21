@@ -12,17 +12,24 @@ export interface User {
 
 export interface Profile {
   _id: string;
-  user: string;
-  fullName?: string;
+  clerkId: string;
+  name: string;
   phone?: string;
-  address?: string;
-  dateOfBirth?: Date;
+  role: 'patient' | 'doctor' | 'admin';
+  location?: string;
+  age?: number;
   gender?: string;
-  emergencyContact?: string;
-  medicalHistory?: string[];
-  allergies?: string[];
+  medicalConditions?: string[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface Doctor {
+  clerkId: string;
+  specialization?: string;
+  email?: string;
+  name?: string;
+  phone?: string;
 }
 
 export interface DoctorProfile {
