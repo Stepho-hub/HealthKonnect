@@ -5,7 +5,7 @@ A comprehensive telemedicine platform built with MERN stack + TypeScript, featur
 ## 🏗️ Project Structure
 
 ```
-healthbridge/
+healthkonnect/
 ├── backend/                 # Express.js API server
 │   ├── src/
 │   │   ├── controllers/     # Route controllers
