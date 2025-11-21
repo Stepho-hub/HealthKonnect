@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # HealthKonnect - Telemedicine MVP
 
 A comprehensive telemedicine platform built with MERN stack + TypeScript, featuring Clerk authentication, real-time messaging, and mobile-first design optimized for Kenya/East Africa.
@@ -97,7 +96,7 @@ VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
 #### 2. **MongoDB Database** 🗄️
 ```bash
 # Get from: https://cloud.mongodb.com
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/healthbridge
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/healthkonnect
 ```
 
 ### Payment Integration (Kenya/East Africa)
@@ -130,7 +129,7 @@ TWILIO_PHONE_NUMBER=+1234567890
 AWS_ACCESS_KEY_ID=your_aws_access_key_id
 AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 AWS_REGION=us-east-1
-S3_BUCKET_NAME=your-healthbridge-bucket
+S3_BUCKET_NAME=your-healthkonnect-bucket
 ```
 
 ### Optional Services
@@ -169,7 +168,7 @@ SMTP_PASS=your_app_password
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd healthbridge
+cd healthkonnect
 
 # Install all dependencies
 npm run install:all
@@ -183,7 +182,7 @@ npm run install:all
 cp backend/.env.example backend/.env
 
 # Required - Edit with your values
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/healthbridge
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/healthkonnect
 CLERK_SECRET_KEY=sk_test_your_clerk_secret_key_here
 CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key_here
 
@@ -203,7 +202,7 @@ TWILIO_PHONE_NUMBER=+1234567890
 AWS_ACCESS_KEY_ID=your_aws_access_key_id
 AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 AWS_REGION=us-east-1
-S3_BUCKET_NAME=your-healthbridge-bucket
+S3_BUCKET_NAME=your-healthkonnect-bucket
 
 # Server Configuration
 PORT=5001
@@ -350,12 +349,12 @@ docker-compose up -d
 npm run build
 
 # Use Docker for deployment
-docker build -t healthbridge-backend ./backend
-docker build -t healthbridge-frontend ./frontend
+docker build -t healthkonnect-backend ./backend
+docker build -t healthkonnect-frontend ./frontend
 
 # Run containers
-docker run -d -p 5001:5001 --env-file backend/.env healthbridge-backend
-docker run -d -p 80:80 healthbridge-frontend
+docker run -d -p 5001:5001 --env-file backend/.env healthkonnect-backend
+docker run -d -p 80:80 healthkonnect-frontend
 ```
 
 ### VPS/Cloud Deployment
@@ -460,7 +459,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **HealthKonnect** - Connecting patients and healthcare providers through technology.
-=======
-# HealthKonnect
-A telemedicine application that supports human healthcare in different parts of the country.
->>>>>>> fb31a32e8ff8160a8f24398a3f110253e201886a
