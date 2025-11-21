@@ -25,11 +25,20 @@ export interface Profile {
 }
 
 export interface Doctor {
-  clerkId: string;
-  specialization?: string;
-  email?: string;
-  name?: string;
-  phone?: string;
+  _id: string;
+  user: string;
+  name: string;
+  specialization: string;
+  city?: string;
+  hospital?: string;
+  rating?: number;
+  reviewCount?: number;
+  consultationFee?: number;
+  latitude?: number;
+  longitude?: number;
+  availableSlots?: string[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface DoctorProfile {
