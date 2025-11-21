@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles with 60-30-10 color scheme */
+@layer base {
+  html {
+    background-color: #fefefe; /* primary-50 equivalent */
+  }
+  body {
+    background-color: #fdfdfb; /* primary-100 equivalent */
+    color: #111827; /* gray-900 */
+  }
+}
+
+@layer components {
+  /* Primary buttons - Secondary Blue */
+  .btn-primary {
+    background-color: #3b82f6; /* secondary-500 */
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+  }
+  .btn-primary:hover {
+    background-color: #2563eb; /* secondary-600 */
+  }
+
+  /* Secondary buttons - Primary Cream */
+  .btn-secondary {
+    background-color: #fdfdfb; /* primary-100 */
+    color: #1f2937; /* gray-800 */
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #f0ede4; /* primary-300 */
+    transition: background-color 0.2s;
+  }
+  .btn-secondary:hover {
+    background-color: #faf9f5; /* primary-200 */
+  }
+
+  /* Accent buttons - Green */
+  .btn-accent {
+    background-color: #10b981; /* accent-500 */
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+  }
+  .btn-accent:hover {
+    background-color: #059669; /* accent-600 */
+  }
+
+  /* Card backgrounds - Primary Cream variations */
+  .card-bg {
+    background-color: #fefefe; /* primary-50 */
+    border: 1px solid #faf9f5; /* primary-200 */
+  }
+
+  /* Section backgrounds */
+  .section-bg {
+    background-color: #fdfdfb; /* primary-100 */
+  }
+}

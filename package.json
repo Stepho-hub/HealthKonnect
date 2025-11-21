@@ -1,0 +1,20 @@
+{
+  "name": "healthbridge",
+  "version": "1.0.0",
+  "description": "HealthKonnect Telemedicine Platform",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && npm run dev\"",
+    "build": "cd frontend && npm run build && cd ../backend && npm run build",
+    "test": "cd backend && npm run test",
+    "lint": "cd backend && npm run lint && cd ../frontend && npm run lint",
+    "mock-test": "cd backend && npm run mock-test",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "keywords": ["telemedicine", "healthcare", "mern", "react", "nodejs"],
+  "author": "HealthKonnect Team",
+  "license": "MIT"
+}
