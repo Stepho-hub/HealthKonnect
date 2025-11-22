@@ -191,8 +191,14 @@ const seedDatabase = async () => {
       { name: 'Grace Wairimu', email: 'grace.wairimu@email.com', phone: '+254778901234', age: 25, gender: 'Female', location: 'Nairobi', medicalConditions: [] },
       { name: 'Henry Mwangi', email: 'henry.mwangi@email.com', phone: '+254789012345', age: 45, gender: 'Male', location: 'Mombasa', medicalConditions: ['Arthritis'] },
       { name: 'Irene Kiprop', email: 'irene.kiprop@email.com', phone: '+254790123456', age: 33, gender: 'Female', location: 'Nairobi', medicalConditions: ['Thyroid issues'] },
-      { name: 'James Ochieng', email: 'james.ochieng@email.com', phone: '+254701234567', age: 27, gender: 'Male', location: 'Kisumu', medicalConditions: [] }
+      { name: 'James Ochieng', email: 'james.ochieng@email.com', phone: '+254701234567', age: 27, gender: 'Male', location: 'Kisumu', medicalConditions: [] },
+      // Specific test patients
+      { name: 'Test Patient 1', email: 'patient1@test.com', phone: '+254700000001', age: 30, gender: 'Male', location: 'Nairobi', medicalConditions: ['Flu'] },
+      { name: 'Test Patient 2', email: 'patient2@test.com', phone: '+254700000002', age: 25, gender: 'Female', location: 'Nairobi', medicalConditions: ['Headache'] }
     ];
+
+    // Admin data
+    const adminData = { name: 'Admin User', email: 'admin@healthkonnect.com', phone: '+254711111111' };
 
     // Create doctors
     const createdDoctors = [];
@@ -233,13 +239,36 @@ const seedDatabase = async () => {
         location: patientData.location,
         age: patientData.age,
         gender: patientData.gender,
-        medicalConditions: patientData.medicalConditions
+        medicalConditions: patientData.medicalConditions || []
       });
       await profile.save();
 
       createdPatients.push({ user: patientUser, profile });
       console.log(`Created patient: ${patientData.name}`);
     }
+
+    // Create admin
+    const adminUser = new UserModel({
+      clerkId: `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: adminData.name,
+      email: adminData.email,
+      role: 'admin'
+    });
+    await adminUser.save();
+
+    const adminProfile = new ProfileModel({
+      clerkId: adminUser.clerkId,
+      name: adminData.name,
+      phone: adminData.phone,
+      role: 'admin',
+      location: 'Nairobi',
+      age: 35,
+      gender: 'Male',
+      medicalConditions: []
+    });
+    await adminProfile.save();
+
+    console.log(`Created admin: ${adminData.name}`);
 
     // Create appointments
     const appointmentStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
@@ -268,10 +297,10 @@ const seedDatabase = async () => {
         patient: patient.user._id,
         doctor: doctor.user._id,
         date,
-        time: doctor.doctor.availableSlots[Math.floor(Math.random() * doctor.doctor.availableSlots.length)],
+        time: doctor.doctor.availableSlots ? doctor.doctor.availableSlots[Math.floor(Math.random() * doctor.doctor.availableSlots.length)] : '09:00',
         status: appointmentStatuses[Math.floor(Math.random() * appointmentStatuses.length)],
         symptoms: symptoms[Math.floor(Math.random() * symptoms.length)],
-        notes: `Consultation for ${patient.profile.medicalConditions.join(', ') || 'general checkup'}`
+        notes: `Consultation for ${(patient.profile.medicalConditions && patient.profile.medicalConditions.length > 0) ? patient.profile.medicalConditions.join(', ') : 'general checkup'}`
       });
       await appointment.save();
       createdAppointments.push(appointment);
