@@ -89,8 +89,8 @@ function AppContent() {
 }
 
 function App() {
-  // Use ClerkProvider if Clerk is available and not in demo mode
-  if (CLERK_AVAILABLE && !DEMO_MODE) {
+  // Use ClerkProvider if Clerk is available
+  if (CLERK_AVAILABLE) {
     return (
       <ClerkProvider
         publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
@@ -109,7 +109,7 @@ function App() {
     );
   }
 
-  // Demo mode or no Clerk - use without ClerkProvider
+  // No Clerk - use without ClerkProvider
   return <AppContent />;
 }
 
