@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
-import { UserModel as User, MessageModel } from './models';
+import { UserModel as User } from './models';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import appointmentRoutes from './routes/appointments';
