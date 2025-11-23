@@ -106,7 +106,7 @@ const BestDoctors: React.FC = () => {
                         {doctor.city}
                       </div>
                       <div className="mt-2 text-sm text-gray-600">
-                        <span className="font-medium">${doctor.consultationFee}</span> consultation fee
+                        <span className="font-medium">KSH {doctor.consultationFee}</span> consultation fee
                       </div>
                     </div>
                   </div>
