@@ -143,18 +143,6 @@ const seedDatabase = async () => {
         availableSlots: ['09:00', '10:00', '14:00', '15:00', '16:00']
       },
       {
-        name: 'Dr. John Mwangi',
-        specialization: 'Neurology',
-        city: 'Nairobi',
-        hospital: 'Nairobi Neurological Clinic',
-        rating: 4.9,
-        reviewCount: 112,
-        consultationFee: 7000,
-        latitude: -1.2864,
-        longitude: 36.8172,
-        availableSlots: ['08:00', '11:00', '13:00', '15:00']
-      },
-      {
         name: 'Dr. Susan Kiprop',
         specialization: 'Internal Medicine',
         city: 'Nakuru',
@@ -165,18 +153,6 @@ const seedDatabase = async () => {
         latitude: -0.3031,
         longitude: 36.0800,
         availableSlots: ['09:00', '10:00', '14:00', '16:00']
-      },
-      {
-        name: 'Dr. Robert Ochieng',
-        specialization: 'Surgery',
-        city: 'Mombasa',
-        hospital: 'Coast General Hospital',
-        rating: 4.7,
-        reviewCount: 134,
-        consultationFee: 6500,
-        latitude: -4.0435,
-        longitude: 39.6682,
-        availableSlots: ['08:00', '10:00', '14:00', '15:00']
       }
     ];
 
