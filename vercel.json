@@ -5,7 +5,8 @@
   "build": {
     "env": {
       "NODE_VERSION": "18",
-      "VITE_API_URL": "https://healthkonnect.onrender.com/api"
+      "VITE_API_URL": "https://healthkonnect.onrender.com/api",
+      "VITE_DEMO_MODE": "false"
     }
   },
   "rewrites": [
