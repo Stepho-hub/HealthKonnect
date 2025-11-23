@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Edit, User, Mail, Phone, MapPin, Calendar, Clock, Save, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { getUserProfile, updateUserProfile, getUserAppointments, setClerkToken } from '../lib/mongodb';
-// import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
@@ -38,17 +38,8 @@ interface Appointment {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  // Mock user for demo purposes
-  const user = {
-    id: 'demo-user',
-    fullName: 'Demo User',
-    firstName: 'Demo',
-    lastName: 'User'
-  };
-  const isLoaded = true;
-
-  // Mock getToken function
-  const getToken = async () => 'demo-token';
+  const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -60,8 +51,10 @@ const Profile: React.FC = () => {
   const [updateSuccess, setUpdateSuccess] = useState(false);
 
   useEffect(() => {
-    fetchProfile();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (isLoaded && user) {
+      fetchProfile();
+    }
+  }, [isLoaded, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (profile?._id) {
@@ -76,8 +69,9 @@ const Profile: React.FC = () => {
         return;
       }
 
-      // Set demo token for API requests
-      setClerkToken('demo-token');
+      // Get token from Clerk
+      const token = await getToken();
+      setClerkToken(token || 'demo-token');
 
       // First try to get existing profile
       console.log('Fetching existing profile...');
@@ -87,7 +81,7 @@ const Profile: React.FC = () => {
         console.log('Profile not found, creating new profile...');
         // Profile doesn't exist, create it
         const profileData = {
-          name: user.fullName || 'Demo User',
+          name: user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User',
           phone: '',
           location: '',
           age: undefined,
@@ -121,7 +115,7 @@ const Profile: React.FC = () => {
       console.error('Error in fetchProfile:', error);
       // Set a default profile on error
       const defaultProfile = {
-        name: user.fullName || 'Demo User',
+        name: user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User',
         phone: '',
         location: '',
         age: undefined,
@@ -141,8 +135,9 @@ const Profile: React.FC = () => {
     try {
       if (!user) return;
 
-      // Set demo token for API requests
-      setClerkToken('demo-token');
+      // Set Clerk token for API requests
+      const token = await getToken();
+      setClerkToken(token || 'demo-token');
 
       const { data, error } = await getUserAppointments();
       if (error) throw error;
@@ -186,9 +181,10 @@ const Profile: React.FC = () => {
 
     setUpdating(true);
     try {
-      // Set demo token for API requests
-      setClerkToken('demo-token');
-      console.log('Using demo token');
+      // Set Clerk token for API requests
+      const token = await getToken();
+      setClerkToken(token || 'demo-token');
+      console.log('Using token:', token);
 
       const updates = {
         name: editedProfile.name?.trim(),

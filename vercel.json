@@ -6,7 +6,8 @@
     "env": {
       "NODE_VERSION": "18",
       "VITE_API_URL": "https://healthkonnect.onrender.com/api",
-      "VITE_DEMO_MODE": "true"
+      "VITE_DEMO_MODE": "false",
+      "VITE_CLERK_PUBLISHABLE_KEY": "pk_test_dHJ1c3R5LWhhcmUtMTQuY2xlcmsuYWNjb3VudHMuZGV2JA"
     }
   },
   "rewrites": [
