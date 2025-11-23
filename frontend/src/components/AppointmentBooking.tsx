@@ -5,7 +5,7 @@ import { Calendar, Clock, Users, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppointmentStore } from '../lib/store';
 import { getDoctors, createAppointment, getDoctorAppointmentsForDate, setClerkToken } from '../lib/mongodb';
-// import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 
 interface Doctor {
@@ -28,12 +28,8 @@ interface Appointment {
 
 const AppointmentBooking: React.FC = () => {
   const navigate = useNavigate();
-  // Mock user for demo purposes
-  const user = { id: 'demo-user', fullName: 'Demo User' };
-  const isLoaded = true;
-
-  // Mock getToken function
-  const getToken = async () => 'demo-token';
+  const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
   const {
     selectedDoctor, setSelectedDoctor,
     selectedDate, setSelectedDate,
@@ -187,7 +183,7 @@ const AppointmentBooking: React.FC = () => {
       navigate('/appointments');
 
       // Log confirmation
-      console.log(`Appointment booked for ${user.fullName} with ${selectedDoctor.name}`);
+      console.log(`Appointment booked for ${user?.fullName || 'User'} with ${selectedDoctor.name}`);
 
     } catch (error) {
       console.error('Error booking appointment:', error);
