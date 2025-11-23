@@ -15,28 +15,26 @@ const Navbar: React.FC = () => {
 
   // Check if Clerk is available
   const CLERK_AVAILABLE = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
-  // Clerk hooks (only use when Clerk is available and not in demo mode)
-  const clerkUser = CLERK_AVAILABLE && !DEMO_MODE ? useUser().user : null;
-  const clerkLoaded = CLERK_AVAILABLE && !DEMO_MODE ? useUser().isLoaded : true;
-  const clerkSignOut = CLERK_AVAILABLE && !DEMO_MODE ? useClerk().signOut : null;
+  // Clerk hooks
+  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
+  const { signOut: clerkSignOut } = useClerk();
 
   // Determine authentication state
-  const isLoggedIn = CLERK_AVAILABLE && !DEMO_MODE
+  const isLoggedIn = CLERK_AVAILABLE
     ? clerkLoaded && !!clerkUser
     : localStorage.getItem('demo_session') !== null || localStorage.getItem('auth_token') !== null;
 
-  const user = CLERK_AVAILABLE && !DEMO_MODE && clerkUser
-    ? { id: clerkUser.id, fullName: clerkUser.fullName || clerkUser.firstName + ' ' + clerkUser.lastName }
+  const user = CLERK_AVAILABLE && clerkUser
+    ? { id: clerkUser.id, fullName: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User' }
     : isLoggedIn ? { id: 'demo-user', fullName: 'Demo User' } : null;
 
-  const isLoaded = CLERK_AVAILABLE && !DEMO_MODE ? clerkLoaded : true;
+  const isLoaded = clerkLoaded;
 
   // Sign out function
   const signOut = async () => {
     try {
-      if (CLERK_AVAILABLE && !DEMO_MODE && clerkSignOut) {
+      if (CLERK_AVAILABLE && clerkSignOut) {
         // Use Clerk sign out
         await clerkSignOut();
       } else {
