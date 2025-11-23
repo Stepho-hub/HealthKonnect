@@ -185,7 +185,7 @@ export const createAppointment = async (appointmentData: any) => {
   try {
     // Transform the data to match backend expectations
     const transformedData = {
-      doctor: appointmentData.doctorId,
+      doctor: appointmentData.doctor,
       date: appointmentData.date,
       time: appointmentData.time,
       symptoms: appointmentData.symptoms || '',

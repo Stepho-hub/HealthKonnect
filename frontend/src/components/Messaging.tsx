@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { Users, Send, Clock } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { getUserMessages, sendMessage, getDoctors, setClerkToken } from '../lib/mongodb';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const WS_BASE_URL = API_BASE_URL.replace(/^http/, 'ws').replace('/api', '');
 import toast from 'react-hot-toast';
 
 // Define interfaces for type safety
@@ -44,7 +47,7 @@ const Messaging: React.FC = () => {
 
   // Initialize Socket.IO connection
   useEffect(() => {
-    const socketConnection = io('http://localhost:5001', {
+    const socketConnection = io(WS_BASE_URL, {
       transports: ['websocket', 'polling']
     });
 
