@@ -260,14 +260,24 @@ const seedDatabase = async () => {
       'Joint pain',
       'High blood pressure',
       'Diabetes checkup',
-      'Mental health consultation'
+      'Mental health consultation',
+      'Allergy symptoms',
+      'Dizziness',
+      'Fatigue',
+      'Nausea',
+      'Shortness of breath',
+      'Sore throat',
+      'Head injury',
+      'Burn injury',
+      'Eye irritation',
+      'Ear pain'
     ];
 
     const createdAppointments = [];
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 50; i++) {
       const patient = createdPatients[Math.floor(Math.random() * createdPatients.length)];
       const doctor = createdDoctors[Math.floor(Math.random() * createdDoctors.length)];
-      const daysFromNow = Math.floor(Math.random() * 30);
+      const daysFromNow = Math.floor(Math.random() * 60); // Extended to 60 days
       const date = new Date();
       date.setDate(date.getDate() + daysFromNow);
 
@@ -329,9 +339,9 @@ const seedDatabase = async () => {
       { name: 'Folic Acid', dosage: '5mg', frequency: 'Once daily', duration: '30 days' }
     ];
 
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 30; i++) {
       const appointment = createdAppointments[i];
-      const numMeds = Math.floor(Math.random() * 3) + 1;
+      const numMeds = Math.floor(Math.random() * 4) + 1;
       const meds = [];
       for (let j = 0; j < numMeds; j++) {
         meds.push(medications[Math.floor(Math.random() * medications.length)]);
