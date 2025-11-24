@@ -19,18 +19,8 @@ const seedDatabase = async () => {
     await mongoose.connect(process.env.MONGODB_URI!);
     console.log('Connected to MongoDB');
 
-    // Clear existing data
-    await Promise.all([
-      DoctorModel.deleteMany({}),
-      UserModel.deleteMany({}),
-      ProfileModel.deleteMany({}),
-      AppointmentModel.deleteMany({}),
-      MessageModel.deleteMany({}),
-      PrescriptionModel.deleteMany({}),
-      NotificationModel.deleteMany({}),
-      PaymentModel.deleteMany({})
-    ]);
-    console.log('Cleared existing data');
+    // Note: Not clearing existing data to preserve current database content
+    console.log('Adding additional mock data without clearing existing data');
 
     // Sample doctors data
     const doctorsData = [
