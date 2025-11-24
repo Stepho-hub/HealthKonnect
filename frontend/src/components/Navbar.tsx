@@ -3,8 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogOut, Home, Calendar, MessageSquare, Search, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { setClerkToken } from '../lib/mongodb';
-import { useUser, useClerk } from '@clerk/clerk-react';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,40 +11,23 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if Clerk is available
-  const CLERK_AVAILABLE = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-  // Clerk hooks
-  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
-  const { signOut: clerkSignOut } = useClerk();
+  // Get user from localStorage
+  const getStoredUser = () => {
+    const userInfo = localStorage.getItem('user_info');
+    return userInfo ? JSON.parse(userInfo) : null;
+  };
 
   // Determine authentication state
-  const isLoggedIn = CLERK_AVAILABLE
-    ? clerkLoaded && !!clerkUser
-    : localStorage.getItem('demo_session') !== null || localStorage.getItem('auth_token') !== null;
-
-  const user = CLERK_AVAILABLE && clerkUser
-    ? { id: clerkUser.id, fullName: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User' }
-    : isLoggedIn ? { id: 'demo-user', fullName: 'Demo User' } : null;
-
-  const isLoaded = clerkLoaded;
+  const isLoggedIn = !!localStorage.getItem('auth_token');
+  const user = getStoredUser();
+  const isLoaded = true;
 
   // Sign out function
   const signOut = async () => {
     try {
-      if (CLERK_AVAILABLE && clerkSignOut) {
-        // Use Clerk sign out
-        await clerkSignOut();
-      } else {
-        // Demo mode sign out
-        localStorage.removeItem('demo_session');
-        sessionStorage.removeItem('demo_user');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_info');
-      }
-
-      // Clear the Clerk token in axios interceptor
-      setClerkToken(null);
+      // JWT sign out - just remove tokens from localStorage
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_info');
 
       // Show success message
       toast.success('Logged out successfully');

@@ -30,22 +30,18 @@ interface MessageData {
   content: string;
 }
 
-// Store for Clerk token
-let clerkToken: string | null = null;
+// Get JWT token from localStorage
+const getToken = () => localStorage.getItem('auth_token');
 
-// Function to set Clerk token from components
-export const setClerkToken = (token: string | null) => {
-  clerkToken = token;
-};
-
-// Set up axios interceptor to include Clerk auth token
+// Set up axios interceptor to include JWT auth token
 axios.interceptors.request.use((config) => {
   console.log('Frontend Debug - API Request:', config.method?.toUpperCase(), config.url);
-  if (clerkToken) {
-    config.headers.Authorization = `Bearer ${clerkToken}`;
-    console.log('Frontend Debug - Using Clerk token');
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+    console.log('Frontend Debug - Using JWT token');
   } else {
-    console.log('Frontend Debug - No Clerk token available');
+    console.log('Frontend Debug - No JWT token available');
   }
   return config;
 });
@@ -65,56 +61,54 @@ axios.interceptors.response.use(
 // Authentication Functions
 export const signUp = async (name: string, email: string, password: string) => {
   try {
-    // For demo purposes, simulate signup without backend call
-    const mockUser = {
-      id: `user_${Date.now()}`,
-      name: name,
-      email: email,
-      role: 'patient'
-    };
-    const mockToken = `jwt_token_${Date.now()}`;
+    const response = await axios.post(`${API_BASE_URL}/auth/signup`, {
+      name,
+      email,
+      password
+    });
+
+    const { user, token } = response.data.data;
 
     // Store auth data
-    localStorage.setItem('auth_token', mockToken);
-    localStorage.setItem('user_info', JSON.stringify(mockUser));
+    localStorage.setItem('auth_token', token);
+    localStorage.setItem('user_info', JSON.stringify(user));
 
     return {
       data: {
-        user: mockUser,
-        session: { access_token: mockToken }
+        user,
+        session: { access_token: token }
       },
       error: null
     };
   } catch (error: unknown) {
-    return { data: null, error: { message: 'Sign up failed' } };
+    const err = error as { response?: { data?: { error?: { message: string } } } };
+    return { data: null, error: err.response?.data?.error || { message: 'Sign up failed' } };
   }
 };
 
 export const signIn = async (email: string, password: string) => {
   try {
-    // For demo purposes, simulate signin without backend call
-    // In a real app, this would validate against stored users
-    const mockUser = {
-      id: `user_${Date.now()}`,
-      name: email.split('@')[0], // Use email prefix as name
-      email: email,
-      role: 'patient'
-    };
-    const mockToken = `jwt_token_${Date.now()}`;
+    const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+      email,
+      password
+    });
+
+    const { user, token } = response.data.data;
 
     // Store auth data
-    localStorage.setItem('auth_token', mockToken);
-    localStorage.setItem('user_info', JSON.stringify(mockUser));
+    localStorage.setItem('auth_token', token);
+    localStorage.setItem('user_info', JSON.stringify(user));
 
     return {
       data: {
-        user: mockUser,
-        session: { access_token: mockToken }
+        user,
+        session: { access_token: token }
       },
       error: null
     };
   } catch (error: unknown) {
-    return { data: null, error: { message: 'Sign in failed' } };
+    const err = error as { response?: { data?: { error?: { message: string } } } };
+    return { data: null, error: err.response?.data?.error || { message: 'Sign in failed' } };
   }
 };
 

@@ -116,14 +116,14 @@ router.delete('/doctors/:id', async (req, res) => {
         }
         const { id } = req.params;
         // Find the doctor first to get the user ID
-        const doctor = await models_1.DoctorModel.findById(id);
+        const doctor = await models_1.DoctorModel.findById(id).populate('user', 'clerkId');
         if (!doctor) {
             return res.status(404).json({ error: { message: 'Doctor not found' } });
         }
         // Delete the doctor profile
         await models_1.DoctorModel.findByIdAndDelete(id);
         // Delete the associated user profile
-        await models_1.ProfileModel.findOneAndDelete({ clerkId: doctor.user.toString() });
+        await models_1.ProfileModel.findOneAndDelete({ clerkId: doctor.user.clerkId });
         // Note: We don't delete the User document as it might be referenced elsewhere
         // In a production system, you might want to mark it as inactive instead
         res.json({ message: 'Doctor deleted successfully' });

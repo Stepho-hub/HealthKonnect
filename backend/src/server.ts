@@ -2,7 +2,8 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
-import { verifyToken } from '@clerk/backend';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -36,8 +37,8 @@ if (!process.env.MONGODB_URI) {
   process.exit(1);
 }
 
-if (!process.env.CLERK_SECRET_KEY) {
-  console.error('CLERK_SECRET_KEY environment variable is required');
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET environment variable is required');
   process.exit(1);
 }
 
@@ -198,7 +199,7 @@ declare global {
   }
 }
 
-// Middleware to verify Clerk JWT and get user
+// Middleware to verify JWT and get user
 const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers['authorization'];
@@ -211,12 +212,12 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
     // Allow demo token for testing
     if (token === 'demo-token') {
       // Create or find demo user
-      let user = await User.findOne({ clerkId: 'demo-user-123' });
+      let user = await User.findOne({ email: 'demo@example.com' });
       if (!user) {
         user = new User({
-          clerkId: 'demo-user-123',
           name: 'Demo User',
           email: 'demo@example.com',
+          password: await bcrypt.hash('demo123', 10),
           role: 'patient'
         });
         await user.save();
@@ -226,51 +227,13 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
       return next();
     }
 
-    // Verify the Clerk JWT token
-    const payload = await verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY!
-    });
+    // Verify the JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
-    if (!payload || !payload.sub) {
-      return res.status(403).json({ error: { message: 'Invalid token' } });
-    }
-
-    // Debug logging
-    console.log('Clerk payload:', {
-      sub: payload.sub,
-      email: payload.email,
-      name: payload.name,
-      firstName: payload.firstName,
-      lastName: payload.lastName
-    });
-
-    // Find or create user in database
-    let user = await User.findOne({ clerkId: payload.sub });
+    // Find user in database
+    const user = await User.findById(decoded.userId);
     if (!user) {
-      // Ensure we have required fields
-      const email = ((payload as any).email_addresses?.[0]?.email_address) ||
-                   ((payload as any).email) ||
-                   `${payload.sub}@clerk.local`;
-
-      const name = payload.name ||
-                  (payload.firstName && payload.lastName ? `${payload.firstName} ${payload.lastName}` : null) ||
-                  `User ${payload.sub.slice(0, 8)}`;
-
-      if (!email) {
-        return res.status(400).json({ error: { message: 'Email is required for registration' } });
-      }
-
-      // Set role to admin for specific admin user (development)
-      const isAdmin = payload.sub === 'user_35dSLGQuem62uwUzlgDOw1Wu8Pf';
-      user = new User({
-        clerkId: payload.sub,
-        name: name,
-        email: email,
-        role: isAdmin ? 'admin' : 'patient'
-      });
-
-      console.log('Creating new user:', { clerkId: user.clerkId, name: user.name, email: user.email });
-      await user.save();
+      return res.status(403).json({ error: { message: 'User not found' } });
     }
 
     req.user = user;

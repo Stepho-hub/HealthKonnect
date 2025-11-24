@@ -3,10 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Doctor = exports.AuditLogModel = exports.PaymentModel = exports.NotificationModel = exports.MedicalDocumentModel = exports.PrescriptionModel = exports.MessageModel = exports.AppointmentModel = exports.DoctorModel = exports.ProfileModel = exports.UserModel = void 0;
+exports.AuditLogModel = exports.PaymentModel = exports.NotificationModel = exports.MedicalDocumentModel = exports.PrescriptionModel = exports.MessageModel = exports.AppointmentModel = exports.DoctorModel = exports.ProfileModel = exports.UserModel = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
-const types_1 = require("../types");
-Object.defineProperty(exports, "Doctor", { enumerable: true, get: function () { return types_1.Doctor; } });
 // User Schema
 const userSchema = new mongoose_1.default.Schema({
     clerkId: { type: String, required: true, unique: true },

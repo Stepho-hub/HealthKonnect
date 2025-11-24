@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import {
   DoctorModel,
   UserModel,
@@ -169,36 +170,38 @@ const seedDatabase = async () => {
     // Create doctors
     const createdDoctors = [];
     for (const doctorData of doctorsData) {
-      const placeholderUser = new UserModel({
-        clerkId: `doctor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      const hashedPassword = await bcrypt.hash('doctor123', 10);
+      const doctorUser = new UserModel({
         name: doctorData.name,
         email: `${doctorData.name.toLowerCase().replace(/\s+/g, '.')}@h-konnect.com`,
+        password: hashedPassword,
         role: 'doctor'
       });
-      await placeholderUser.save();
+      await doctorUser.save();
 
       const doctor = new DoctorModel({
-        user: placeholderUser._id,
+        user: doctorUser._id,
         ...doctorData
       });
       await doctor.save();
-      createdDoctors.push({ user: placeholderUser, doctor });
+      createdDoctors.push({ user: doctorUser, doctor });
       console.log(`Created doctor: ${doctorData.name}`);
     }
 
     // Create patients
     const createdPatients = [];
     for (const patientData of patientsData) {
+      const hashedPassword = await bcrypt.hash('patient123', 10);
       const patientUser = new UserModel({
-        clerkId: `patient_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: patientData.name,
         email: patientData.email,
+        password: hashedPassword,
         role: 'patient'
       });
       await patientUser.save();
 
       const profile = new ProfileModel({
-        clerkId: patientUser.clerkId,
+        user: patientUser._id,
         name: patientData.name,
         phone: patientData.phone,
         role: 'patient',
@@ -215,16 +218,17 @@ const seedDatabase = async () => {
 
     // Create admins
     for (const admin of adminData) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
       const adminUser = new UserModel({
-        clerkId: `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: admin.name,
         email: admin.email,
+        password: hashedPassword,
         role: 'admin'
       });
       await adminUser.save();
 
       const adminProfile = new ProfileModel({
-        clerkId: adminUser.clerkId,
+        user: adminUser._id,
         name: admin.name,
         phone: admin.phone,
         role: 'admin',

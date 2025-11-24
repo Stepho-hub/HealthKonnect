@@ -2,9 +2,9 @@
 
 export interface User {
   _id: string;
-  clerkId: string;
   name: string;
   email: string;
+  password: string;
   role: 'patient' | 'doctor' | 'admin';
   createdAt: Date;
   updatedAt: Date;
@@ -12,7 +12,7 @@ export interface User {
 
 export interface Profile {
   _id: string;
-  clerkId: string;
+  user: string;
   name: string;
   phone?: string;
   role: 'patient' | 'doctor' | 'admin';

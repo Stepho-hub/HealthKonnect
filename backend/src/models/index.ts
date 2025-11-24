@@ -3,15 +3,15 @@ import { User, Profile, Doctor, Appointment, Message, Prescription, MedicalDocum
 
 // User Schema
 const userSchema = new mongoose.Schema<User>({
-  clerkId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   role: { type: String, enum: ['patient', 'doctor', 'admin'], default: 'patient' }
 }, { timestamps: true });
 
 // Profile Schema
 const profileSchema = new mongoose.Schema<Profile>({
-  clerkId: { type: String, required: true, unique: true },
+  user: { type: mongoose.Schema.Types.ObjectId as any, ref: 'User', required: true, unique: true },
   name: { type: String, required: true },
   phone: String,
   role: { type: String, enum: ['patient', 'doctor', 'admin'], default: 'patient' },

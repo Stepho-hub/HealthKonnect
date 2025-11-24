@@ -22,6 +22,7 @@ const admin_1 = __importDefault(require("./routes/admin"));
 const doctors_1 = __importDefault(require("./routes/doctors"));
 const uploads_1 = __importDefault(require("./routes/uploads"));
 const prescriptions_1 = __importDefault(require("./routes/prescriptions"));
+const models_2 = require("./models");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -52,11 +53,134 @@ app.use(express_1.default.json());
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
 // MongoDB connection
 mongoose_1.default.connect(process.env.MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
+    .then(async () => {
+    console.log('Connected to MongoDB');
+    // Auto-seed database if empty
+    const doctorCount = await models_2.DoctorModel.countDocuments();
+    if (doctorCount === 0) {
+        console.log('Database is empty, seeding with mock data...');
+        await seedDatabase();
+    }
+    else {
+        console.log(`Database already has ${doctorCount} doctors`);
+    }
+})
     .catch(err => {
     console.error('MongoDB connection error:', err);
     process.exit(1);
 });
+// Auto-seed function
+async function seedDatabase() {
+    try {
+        // Sample doctors data
+        const doctorsData = [
+            {
+                name: 'Dr. Sarah Johnson',
+                specialization: 'Cardiology',
+                city: 'Nairobi',
+                hospital: 'Kenyatta National Hospital',
+                rating: 4.8,
+                reviewCount: 127,
+                consultationFee: 5000,
+                latitude: -1.2864,
+                longitude: 36.8172,
+                availableSlots: ['09:00', '10:00', '14:00', '15:00', '16:00']
+            },
+            {
+                name: 'Dr. Michael Chen',
+                specialization: 'Dermatology',
+                city: 'Nairobi',
+                hospital: 'Nairobi Hospital',
+                rating: 4.6,
+                reviewCount: 89,
+                consultationFee: 4500,
+                latitude: -1.2864,
+                longitude: 36.8172,
+                availableSlots: ['08:00', '11:00', '13:00', '15:00', '17:00']
+            },
+            {
+                name: 'Dr. Grace Wanjiku',
+                specialization: 'Pediatrics',
+                city: 'Nairobi',
+                hospital: 'Mater Hospital',
+                rating: 4.9,
+                reviewCount: 156,
+                consultationFee: 4000,
+                latitude: -1.2864,
+                longitude: 36.8172,
+                availableSlots: ['09:00', '10:00', '11:00', '14:00', '16:00']
+            }
+        ];
+        // Sample patients data
+        const patientsData = [
+            { name: 'Alice Wanjiku', email: 'alice.wanjiku@email.com', phone: '+254712345678', age: 28, gender: 'Female', location: 'Nairobi', medicalConditions: ['Hypertension'] },
+            { name: 'Bob Kiprop', email: 'bob.kiprop@email.com', phone: '+254723456789', age: 35, gender: 'Male', location: 'Eldoret', medicalConditions: ['Diabetes'] },
+            { name: 'Test Patient 1', email: 'patient1@test.com', phone: '+254700000001', age: 30, gender: 'Male', location: 'Nairobi', medicalConditions: ['Flu'] },
+            { name: 'Test Patient 2', email: 'patient2@test.com', phone: '+254700000002', age: 25, gender: 'Female', location: 'Nairobi', medicalConditions: ['Headache'] }
+        ];
+        // Create doctors
+        for (const doctorData of doctorsData) {
+            const placeholderUser = new models_2.UserModel({
+                clerkId: `doctor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                name: doctorData.name,
+                email: `${doctorData.name.toLowerCase().replace(/\s+/g, '.')}@h-konnect.com`,
+                role: 'doctor'
+            });
+            await placeholderUser.save();
+            const doctor = new models_2.DoctorModel({
+                user: placeholderUser._id,
+                ...doctorData
+            });
+            await doctor.save();
+            console.log(`Created doctor: ${doctorData.name}`);
+        }
+        // Create patients
+        for (const patientData of patientsData) {
+            const patientUser = new models_2.UserModel({
+                clerkId: `patient_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                name: patientData.name,
+                email: patientData.email,
+                role: 'patient'
+            });
+            await patientUser.save();
+            const profile = new models_2.ProfileModel({
+                clerkId: patientUser.clerkId,
+                name: patientData.name,
+                phone: patientData.phone,
+                role: 'patient',
+                location: patientData.location,
+                age: patientData.age,
+                gender: patientData.gender,
+                medicalConditions: patientData.medicalConditions || []
+            });
+            await profile.save();
+            console.log(`Created patient: ${patientData.name}`);
+        }
+        // Create admin
+        const adminUser = new models_2.UserModel({
+            clerkId: `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name: 'Admin User',
+            email: 'admin@healthkonnect.com',
+            role: 'admin'
+        });
+        await adminUser.save();
+        const adminProfile = new models_2.ProfileModel({
+            clerkId: adminUser.clerkId,
+            name: 'Admin User',
+            phone: '+254711111111',
+            role: 'admin',
+            location: 'Nairobi',
+            age: 35,
+            gender: 'Male',
+            medicalConditions: []
+        });
+        await adminProfile.save();
+        console.log('Auto-seeding completed successfully!');
+    }
+    catch (error) {
+        console.error('Auto-seeding failed:', error);
+    }
+}
 // Middleware to verify Clerk JWT and get user
 const authenticateToken = async (req, res, next) => {
     try {
@@ -164,7 +288,7 @@ io.on('connection', (socket) => {
     socket.on('send-message', async (data) => {
         try {
             // Save message to database
-            const message = new models_1.MessageModel(data.message);
+            const message = new models_2.MessageModel(data.message);
             await message.save();
             // Emit to room
             io.to(data.roomId).emit('receive-message', message);
@@ -177,7 +301,7 @@ io.on('connection', (socket) => {
         console.log('User disconnected:', socket.id);
     });
 });
-// 404 handler
+// 404 handler for API routes
 app.use((req, res) => {
     res.status(404).json({ error: { message: 'Route not found' } });
 });
