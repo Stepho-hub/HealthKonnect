@@ -89,27 +89,6 @@ function AppContent() {
 }
 
 function App() {
-  // Use ClerkProvider if Clerk is available
-  if (CLERK_AVAILABLE) {
-    return (
-      <ClerkProvider
-        publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
-        appearance={{
-          baseTheme: undefined,
-          variables: {
-            colorPrimary: '#2563eb',
-            colorBackground: '#ffffff',
-            colorInputBackground: '#f8fafc',
-            colorInputText: '#1e293b',
-          },
-        }}
-      >
-        <AppContent />
-      </ClerkProvider>
-    );
-  }
-
-  // No Clerk - use without ClerkProvider
   return <AppContent />;
 }
 
