@@ -108,8 +108,8 @@ router.get('/:id/pdf', async (req: Request, res: Response) => {
     }
 
     // Check if user is authorized (patient or doctor)
-    const isPatient = prescription.patient._id.toString() === req.user._id.toString();
-    const isDoctor = prescription.doctor._id.toString() === req.user._id.toString();
+    const isPatient = (prescription.patient as any)._id.toString() === req.user._id.toString();
+    const isDoctor = (prescription.doctor as any)._id.toString() === req.user._id.toString();
 
     if (!isPatient && !isDoctor) {
       return res.status(403).json({ error: { message: 'Access denied' } });

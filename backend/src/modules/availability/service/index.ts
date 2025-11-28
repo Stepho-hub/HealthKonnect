@@ -137,7 +137,7 @@ export class AvailabilityService {
     const lockUntil = new Date();
     lockUntil.setMinutes(lockUntil.getMinutes() + lockDurationMinutes);
 
-    return PhysicalAppointmentModel.findByIdAndUpdate(
+    const appointment = await PhysicalAppointmentModel.findByIdAndUpdate(
       appointmentId,
       {
         status: 'locked',
@@ -145,10 +145,16 @@ export class AvailabilityService {
       },
       { new: true }
     );
+
+    if (!appointment) {
+      throw new Error('Appointment not found');
+    }
+
+    return appointment;
   }
 
   static async confirmAppointmentPayment(appointmentId: string, paymentRef: string): Promise<PhysicalAppointment> {
-    return PhysicalAppointmentModel.findByIdAndUpdate(
+    const appointment = await PhysicalAppointmentModel.findByIdAndUpdate(
       appointmentId,
       {
         status: 'confirmed',
@@ -156,10 +162,16 @@ export class AvailabilityService {
       },
       { new: true }
     );
+
+    if (!appointment) {
+      throw new Error('Appointment not found');
+    }
+
+    return appointment;
   }
 
   static async releaseLockedAppointment(appointmentId: string): Promise<PhysicalAppointment> {
-    return PhysicalAppointmentModel.findByIdAndUpdate(
+    const appointment = await PhysicalAppointmentModel.findByIdAndUpdate(
       appointmentId,
       {
         status: 'pending',
@@ -167,6 +179,12 @@ export class AvailabilityService {
       },
       { new: true }
     );
+
+    if (!appointment) {
+      throw new Error('Appointment not found');
+    }
+
+    return appointment;
   }
 
   // Payment Integration
@@ -189,11 +207,17 @@ export class AvailabilityService {
     intasendRef?: string,
     paymentUrl?: string
   ): Promise<PaymentIntent> {
-    return PaymentIntentModel.findByIdAndUpdate(
+    const paymentIntent = await PaymentIntentModel.findByIdAndUpdate(
       paymentIntentId,
       { status, intasendRef, paymentUrl },
       { new: true }
-    );
+    ) as PaymentIntent | null;
+
+    if (!paymentIntent) {
+      throw new Error('Payment intent not found');
+    }
+
+    return paymentIntent;
   }
 
   static async getPaymentIntent(paymentIntentId: string): Promise<PaymentIntent | null> {
