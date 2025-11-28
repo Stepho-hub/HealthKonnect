@@ -61,7 +61,7 @@ const Signup: React.FC = () => {
 
       {/* Side Animations - Left Side */}
       <motion.div
-        className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-purple-400/20 to-transparent"
+        className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-purple-400/20 to-transparent pointer-events-none"
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut" }}
@@ -109,7 +109,7 @@ const Signup: React.FC = () => {
 
       {/* Side Animations - Right Side */}
       <motion.div
-        className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-pink-400/20 to-transparent"
+        className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-pink-400/20 to-transparent pointer-events-none"
         initial={{ x: 100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
@@ -221,7 +221,7 @@ const Signup: React.FC = () => {
 
         {/* Form Card */}
         <motion.div
-          className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100"
+          className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100 relative z-10"
           variants={itemVariants}
           whileHover={{ y: -5 }}
           transition={{ duration: 0.3 }}
