@@ -10,7 +10,7 @@ describe('HealthKonnect MVP - Mock Integration Tests', () => {
 
   beforeAll(async () => {
     // Connect to test database
-    const testDbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/healthbridge-test';
+    const testDbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/healthkonnect-test';
     await mongoose.connect(testDbUri);
     console.log('Connected to test database');
   });
@@ -29,9 +29,9 @@ describe('HealthKonnect MVP - Mock Integration Tests', () => {
 
     // Create demo user
     demoUser = new UserModel({
-      clerkId: 'demo-user-123',
       name: 'Demo Patient',
       email: 'patient@demo.com',
+      password: 'demopass123',
       role: 'patient'
     });
     await demoUser.save();

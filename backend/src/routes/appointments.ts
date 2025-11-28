@@ -23,7 +23,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     const appointment = new AppointmentModel({
       patient: req.user._id,
-      doctor: doctor,
+      doctor: doctorDoc.user, // Reference the doctor's user ID
       date: new Date(date),
       time: time.trim(),
       symptoms: symptoms?.trim(),
@@ -32,7 +32,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     await appointment.save();
     await appointment.populate('patient', 'name email');
-    await appointment.populate('doctor', 'name specialization');
+    await appointment.populate('doctor', 'name email');
 
     res.status(201).json({ data: appointment });
   } catch (error) {

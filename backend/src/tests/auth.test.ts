@@ -6,7 +6,7 @@ import { UserModel } from '../models';
 describe('Authentication API', () => {
   beforeAll(async () => {
     // Connect to test database
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/healthbridge-test');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/healthkonnect-test');
   });
 
   afterAll(async () => {

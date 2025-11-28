@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 console.log('Frontend Debug - API Base URL:', API_BASE_URL);
 
@@ -59,12 +59,13 @@ axios.interceptors.response.use(
 );
 
 // Authentication Functions
-export const signUp = async (name: string, email: string, password: string) => {
+export const signUp = async (name: string, email: string, password: string, role: string = 'patient') => {
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/signup`, {
       name,
       email,
-      password
+      password,
+      role
     });
 
     const { user, token } = response.data.data;
@@ -114,8 +115,11 @@ export const signIn = async (email: string, password: string) => {
 
 export const signOut = async () => {
   // For JWT, sign out is handled on client side by removing token
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user_info');
   return { error: null };
 };
+
 
 export const resetPassword = async (email: string) => {
   try {
@@ -255,7 +259,12 @@ export const getNews = async () => {
 // Prescription Functions
 export const getUserPrescriptions = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/prescriptions/patient`);
+    // Get user role from localStorage to determine which endpoint to call
+    const userInfo = localStorage.getItem('user_info');
+    const user = userInfo ? JSON.parse(userInfo) : null;
+    const endpoint = user?.role === 'doctor' ? 'doctor' : 'patient';
+
+    const response = await axios.get(`${API_BASE_URL}/prescriptions/${endpoint}`);
     return response.data;
   } catch (error: any) {
     return { data: null, error: error.response?.data?.error || { message: 'Failed to get prescriptions' } };
@@ -309,5 +318,24 @@ export const getMedicalDocuments = async () => {
     return response.data;
   } catch (error: any) {
     return { data: null, error: error.response?.data?.error || { message: 'Failed to get documents' } };
+  }
+};
+
+// Doctor-specific functions
+export const getDoctorPatients = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/users/doctor/patients`);
+    return response.data;
+  } catch (error: any) {
+    return { data: null, error: error.response?.data?.error || { message: 'Failed to get patients' } };
+  }
+};
+
+export const getPatientProfile = async (patientId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/users/patient/${patientId}`);
+    return response.data;
+  } catch (error: any) {
+    return { data: null, error: error.response?.data?.error || { message: 'Failed to get patient profile' } };
   }
 };

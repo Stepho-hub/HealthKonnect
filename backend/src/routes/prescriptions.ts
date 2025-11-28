@@ -18,9 +18,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Verify appointment exists and doctor is authorized
-    const appointment = await AppointmentModel.findById(appointmentId)
-      .populate('patient', 'name email')
-      .populate('doctor', 'name specialization');
+    const appointment = await AppointmentModel.findById(appointmentId);
 
     if (!appointment) {
       return res.status(404).json({ error: { message: 'Appointment not found' } });
@@ -29,6 +27,10 @@ router.post('/', async (req: Request, res: Response) => {
     if (appointment.doctor.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: { message: 'Access denied' } });
     }
+
+    // Now populate for the prescription creation
+    await appointment.populate('patient', 'name email');
+    await appointment.populate('doctor', 'name specialization');
 
     // Create prescription
     const prescription = new PrescriptionModel({
@@ -106,8 +108,8 @@ router.get('/:id/pdf', async (req: Request, res: Response) => {
     }
 
     // Check if user is authorized (patient or doctor)
-    const isPatient = prescription.patient.toString() === req.user._id.toString();
-    const isDoctor = prescription.doctor.toString() === req.user._id.toString();
+    const isPatient = prescription.patient._id.toString() === req.user._id.toString();
+    const isDoctor = prescription.doctor._id.toString() === req.user._id.toString();
 
     if (!isPatient && !isDoctor) {
       return res.status(403).json({ error: { message: 'Access denied' } });

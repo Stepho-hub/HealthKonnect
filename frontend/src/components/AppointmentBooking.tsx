@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { format, addDays, isToday, isTomorrow } from 'date-fns';
 import { Calendar, Clock, Users, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useAppointmentStore } from '../lib/store';
-import { getDoctors, createAppointment, getDoctorAppointmentsForDate, setClerkToken } from '../lib/mongodb';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useAppointmentStore, useAuthStore } from '../lib/store';
+import { getDoctors, createAppointment, getDoctorAppointmentsForDate } from '../lib/mongodb';
 import toast from 'react-hot-toast';
 
 interface Doctor {
@@ -28,8 +27,7 @@ interface Appointment {
 
 const AppointmentBooking: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
+  const { user, isAuthenticated } = useAuthStore();
   const {
     selectedDoctor, setSelectedDoctor,
     selectedDate, setSelectedDate,
@@ -46,12 +44,6 @@ const AppointmentBooking: React.FC = () => {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        // Get real Clerk token if user is logged in
-        if (user && isLoaded) {
-          const token = await getToken();
-          setClerkToken(token || '');
-        }
-
         const { data, error } = await getDoctors();
         if (error) throw error;
         setDoctors(data || []);
@@ -64,17 +56,11 @@ const AppointmentBooking: React.FC = () => {
     };
 
     fetchDoctors();
-  }, [user, isLoaded, getToken]);
+  }, []);
 
   useEffect(() => {
     const fetchAvailableTimes = async () => {
       if (!selectedDoctor || !selectedDate) return;
-
-      // Get real Clerk token if user is logged in
-      if (user && isLoaded) {
-        const token = await getToken();
-        setClerkToken(token || '');
-      }
 
       const {data: appointments, error} = await getDoctorAppointmentsForDate(selectedDoctor._id, selectedDate);
       if (error) {
@@ -116,7 +102,7 @@ const AppointmentBooking: React.FC = () => {
       setAvailableTimes(slots);
     };
     fetchAvailableTimes();
-  }, [selectedDate, selectedDoctor, user, isLoaded, getToken]);
+  }, [selectedDate, selectedDoctor]);
 
   const handleDoctorSelect = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
@@ -139,7 +125,7 @@ const AppointmentBooking: React.FC = () => {
   };
 
   const handleBookAppointment = async () => {
-    if (!user || !isLoaded) {
+    if (!user || !isAuthenticated) {
       toast.error('Please log in to book an appointment');
       navigate('/login');
       return;
@@ -151,16 +137,6 @@ const AppointmentBooking: React.FC = () => {
     }
 
     try {
-      // Get real Clerk token
-      const token = await getToken();
-      if (!token) {
-        toast.error('Authentication failed. Please log in again.');
-        navigate('/login');
-        return;
-      }
-
-      setClerkToken(token);
-
       const appointmentDate = new Date(selectedDate);
       const [hours, minutes] = selectedTime.split(':').map(Number);
       appointmentDate.setHours(hours, minutes);
@@ -183,7 +159,7 @@ const AppointmentBooking: React.FC = () => {
       navigate('/appointments');
 
       // Log confirmation
-      console.log(`Appointment booked for ${user?.fullName || 'User'} with ${selectedDoctor.name}`);
+      console.log(`Appointment booked for ${user?.name || 'User'} with ${selectedDoctor.name}`);
 
     } catch (error) {
       console.error('Error booking appointment:', error);

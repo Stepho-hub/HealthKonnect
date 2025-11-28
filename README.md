@@ -4,7 +4,7 @@
 [![Backend Deployment](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat&logo=render)](https://healthkonnect.onrender.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive telemedicine platform built with MERN stack + TypeScript, featuring Clerk authentication, real-time messaging, and mobile-first design optimized for Kenya/East Africa.
+A comprehensive telemedicine platform built with MERN stack + TypeScript, featuring JWT authentication, real-time messaging, and mobile-first design optimized for Kenya/East Africa.
 
 ## 🌐 Live Demo
 
@@ -43,22 +43,58 @@ healthkonnect/
 └── README.md
 ```
 
-## 🚀 Features
+## 🚀 MVP Features Highlight
 
-### Core Functionality
-- **User Authentication**: Clerk-based auth with role management (Patient, Doctor, Admin)
-- **Appointment Booking**: Multi-step booking with real-time availability
-- **Real-time Messaging**: Socket.IO powered chat between patients and doctors
-- **Profile Management**: Comprehensive user profiles with medical history
-- **Doctor Directory**: Browse and filter doctors by specialty/location
-- **Admin Dashboard**: User and system management
+### ⭐ Core MVP Features
 
-### Advanced Features
-- **Offline-First**: Service workers for offline functionality
-- **Mobile-First**: Responsive design optimized for mobile devices
-- **Real-time Notifications**: In-app and SMS notifications
-- **AI Symptom Checker**: Rule-based triage system
-- **Payment Integration**: M-Pesa STK Push (mock mode available)
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **🔐 User Authentication** | JWT-based secure login with role management (Patient, Doctor, Admin) | ✅ Live |
+| **📅 Appointment Booking** | Real-time doctor availability with multi-step booking process | ✅ Live |
+| **💬 Real-time Messaging** | Socket.IO powered secure chat between patients and doctors | ✅ Live |
+| **👨‍⚕️ Doctor Directory** | Browse and filter doctors by specialty, location, and credentials | ✅ Live |
+| **📋 Prescription Management** | Digital prescriptions with PDF generation and pharmacy integration | ✅ Live |
+| **🛡️ Admin Dashboard** | Complete CRUD operations for users, doctors, and system management | ✅ Live |
+| **📹 Video Consultation** | WebRTC-powered video calls with screen sharing and chat | ✅ Live |
+| **👤 User Profiles** | Comprehensive profile management with medical history | ✅ Live |
+| **📱 Mobile-First Design** | Responsive design optimized for smartphones and low bandwidth | ✅ Live |
+| **🔒 Error Boundaries** | Crash protection and graceful error handling | ✅ Live |
+
+### 🚀 Advanced Features (Recently Added)
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **📹 Video Consultation** | WebRTC-powered video calls with screen sharing and chat | ✅ Live |
+| **👤 User Profiles** | Comprehensive profile management with medical history | ✅ Live |
+| **🔒 Error Boundaries** | Crash protection and graceful error handling | ✅ Live |
+| **📱 Mobile-First Design** | Responsive design optimized for smartphones and low bandwidth | ✅ Live |
+
+## 👥 User Roles & Permissions
+
+- **👤 Patient**: Book appointments, view medical records, communicate with doctors, access prescriptions
+- **👨‍⚕️ Doctor**: Manage appointments, create prescriptions, access patient profiles, communicate with patients
+- **🔬 Medical Specialist**: Specialized healthcare professional with doctor privileges and advanced features
+- **👑 Admin**: Super admin with full system access, user management, system configuration
+  - Can create additional admin accounts through the admin panel
+  - Manage all users, doctors, and system settings
+  - Access to system analytics and administrative controls
+
+### 🔐 Account Creation
+
+- **Public Registration**: Users can sign up as Patient, Doctor, or Medical Specialist
+- **Admin Creation**: Only existing admins can create new admin accounts through the admin panel
+- **Role Selection**: Required during signup to ensure proper access and feature availability
+
+### 🚀 Future Roadmap
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **📱 Mobile App** | React Native iOS/Android apps for native experience | 🔄 Q1 2026 |
+| **💰 M-Pesa Integration** | Direct payment processing for Kenyan users | 🔄 Q1 2026 |
+| **📲 SMS Notifications** | Twilio-powered appointment reminders | 🔄 Q1 2025 |
+| **🤖 AI Symptom Checker** | Rule-based triage system for initial assessments | 🔄 Q1 2026 |
+| **📍 Location Services** | Google Maps integration for location-based features | 📋 Planned |
+| **💾 Offline Functionality** | Service workers for offline appointment queuing | 📋 Planned |
 
 ## 🛠️ Tech Stack
 
@@ -67,7 +103,7 @@ healthkonnect/
 - **TypeScript** for type safety
 - **MongoDB** with **Mongoose** ODM
 - **Socket.IO** for real-time features
-- **Clerk** for authentication
+- **JWT** for authentication
 - **Zod** for runtime validation
 - **Helmet** for security
 
@@ -77,7 +113,7 @@ healthkonnect/
 - **Tailwind CSS** for styling
 - **Framer Motion** for animations
 - **React Router** for navigation
-- **Clerk React** for auth integration
+- **JWT** for auth integration
 
 ### DevOps
 - **Docker** & **Docker Compose** for containerization
@@ -89,18 +125,16 @@ healthkonnect/
 
 - Node.js 18+
 - MongoDB Atlas account (or local MongoDB)
-- Clerk account for authentication
 - Git
 
 ## 🔑 Required API Keys & Services
 
 ### Essential Services (Required for Production)
 
-#### 1. **Clerk Authentication** 🔐
+#### 1. **JWT Authentication** 🔐
 ```bash
-# Get from: https://clerk.com
-CLERK_SECRET_KEY=sk_test_your_clerk_secret_key
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
+# Generate a secure random string for JWT signing
+JWT_SECRET=your_super_secure_jwt_secret_key_here
 ```
 
 #### 2. **MongoDB Database** 🗄️
@@ -193,8 +227,7 @@ cp backend/.env.example backend/.env
 
 # Required - Edit with your values
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/healthkonnect
-CLERK_SECRET_KEY=sk_test_your_clerk_secret_key_here
-CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key_here
+JWT_SECRET=your_super_secure_jwt_secret_key_here
 
 # Optional - Payment Integration (Kenya)
 MPESA_CONSUMER_KEY=your_mpesa_consumer_key
@@ -225,12 +258,6 @@ FRONTEND_URL=http://localhost:5173
 # Copy example file
 cp frontend/.env.example frontend/.env
 
-# Required - Clerk Authentication (Get from https://dashboard.clerk.com)
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key_here
-
-# Demo Mode - set to false for full Clerk authentication
-VITE_DEMO_MODE=false
-
 # API Configuration
 # For development: http://localhost:5001
 # For production: https://healthkonnect.onrender.com
@@ -257,44 +284,39 @@ cd frontend && npm run dev   # Frontend at http://localhost:5173
 - **Backend API**: http://localhost:5001
 - **API Health Check**: http://localhost:5001/api/health
 
-### Clerk Authentication Setup
+### JWT Authentication Setup
 
-**HealthKonnect uses Clerk for production-ready authentication with no limitations.**
+**HealthKonnect uses JWT (JSON Web Tokens) for secure authentication with custom user management.**
 
-#### Setting up Clerk (Required for Production):
+#### Setting up JWT Authentication:
 
-1. **Create Clerk Account**: Sign up at [clerk.com](https://clerk.com)
-2. **Create Application**:
-   - Go to Dashboard → Create Application
-   - Choose "React" as your framework
-   - Set up authentication methods (Email, Phone, etc.)
-3. **Get API Keys**:
-   - Go to API Keys section
-   - Copy `Publishable key` → `VITE_CLERK_PUBLISHABLE_KEY`
-   - Copy `Secret key` → `CLERK_SECRET_KEY`
+1. **Generate JWT Secret**: Create a secure random string for signing tokens
+   ```bash
+   # Generate a secure secret (Linux/Mac)
+   openssl rand -base64 32
 
-#### Environment Configuration:
+   # Or use Node.js
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+   ```
 
-**Frontend (.env)**:
-```bash
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxx
-VITE_DEMO_MODE=false
+2. **Configure Environment**:
+   - Add `JWT_SECRET=your_generated_secret_here` to backend `.env`
+   - JWT tokens expire after 24 hours by default
+
+#### Authentication Features Available:
+- ✅ **Secure JWT Tokens**: Industry-standard authentication
+- ✅ **Role-Based Access**: Admin, Doctor, Patient roles
+- ✅ **Session Management**: Automatic token refresh
+- ✅ **Password Hashing**: bcrypt encryption
+- ✅ **Admin Dashboard**: Complete user management
+- ✅ **Custom Implementation**: Full control over auth logic
+
+#### Default Admin Account:
 ```
-
-**Backend (.env)**:
-```bash
-CLERK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxx
+Email: admin@healthkonnect.com
+Password: admin123
+Role: Administrator
 ```
-
-#### Clerk Features Available:
-- ✅ **Unlimited Users**: No user limits
-- ✅ **Multiple Auth Methods**: Email, Phone, Social logins
-- ✅ **User Management**: Profiles, roles, permissions
-- ✅ **Security**: JWT tokens, session management
-- ✅ **Admin Dashboard**: User management interface
-- ✅ **Production Ready**: Enterprise-grade security
-
-**Note**: Demo mode (`VITE_DEMO_MODE=true`) bypasses Clerk for development only.
 
 ## 🧪 Testing
 
@@ -324,15 +346,14 @@ npm run mock-test
 
 #### Required API Keys for Production:
 
-1. **Clerk Authentication** (Essential)
-   - Sign up at [clerk.com](https://clerk.com)
-   - Create a new application
-   - Copy `CLERK_SECRET_KEY` and `CLERK_PUBLISHABLE_KEY`
+1. **JWT Authentication** (Essential)
+    - Generate a secure JWT secret key
+    - Add `JWT_SECRET=your_secure_secret_here` to environment
 
 2. **MongoDB Database** (Essential)
-   - Sign up at [MongoDB Atlas](https://cloud.mongodb.com)
-   - Create a cluster and database
-   - Get connection string for `MONGODB_URI`
+    - Sign up at [MongoDB Atlas](https://cloud.mongodb.com)
+    - Create a cluster and database
+    - Get connection string for `MONGODB_URI`
 
 3. **M-Pesa Integration** (Kenya Payments)
    - Register at [Safaricom Developer Portal](https://developer.safaricom.co.ke)
@@ -359,10 +380,8 @@ npm run mock-test
    - **Output Directory**: `dist`
    - **Install Command**: `npm install`
 3. **Environment Variables**:
-   - `NODE_VERSION`: `18`
-   - `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key
-   - `VITE_API_URL`: `https://healthkonnect.onrender.com`
-   - `VITE_DEMO_MODE`: `false`
+    - `NODE_VERSION`: `18`
+    - `VITE_API_URL`: `https://healthkonnect.onrender.com`
 4. **Deploy**: Vercel will auto-deploy on git push
 
 ### Render Backend Deployment
@@ -374,11 +393,11 @@ npm run mock-test
    - **Build Command**: `npm install && npm run build`
    - **Start Command**: `npm start`
 4. **Environment Variables**:
-   - `MONGODB_URI`: Your MongoDB connection string
-   - `CLERK_SECRET_KEY`: Your Clerk secret key
-   - `NODE_ENV`: `production`
-   - `PORT`: `10000` (Render default)
-   - `FRONTEND_URL`: `https://health-konnect-jdae.vercel.app`
+    - `MONGODB_URI`: Your MongoDB connection string
+    - `JWT_SECRET`: Your JWT secret key
+    - `NODE_ENV`: `production`
+    - `PORT`: `10000` (Render default)
+    - `FRONTEND_URL`: `https://health-konnect-jdae.vercel.app`
 5. **Deploy**: Render will build and deploy automatically
 
 ### Troubleshooting Common Issues
@@ -429,8 +448,7 @@ docker run -d -p 80:80 healthkonnect-frontend
 ```bash
 # ✅ Required for all deployments
 MONGODB_URI=mongodb+srv://...
-CLERK_SECRET_KEY=sk_test_...
-CLERK_PUBLISHABLE_KEY=pk_test_...
+JWT_SECRET=your_secure_jwt_secret_here
 
 # ✅ Required for Kenya deployment
 MPESA_CONSUMER_KEY=...
@@ -471,12 +489,18 @@ The application is optimized for:
 
 ## 🔒 Security Features
 
-- **RBAC**: Role-based access control
+- **JWT Authentication**: Secure token-based authentication with custom implementation
+- **RBAC**: Role-based access control (Admin, Doctor, Patient)
+- **Password Hashing**: bcrypt encryption for passwords
 - **Input validation**: Zod schemas for all inputs
 - **Rate limiting**: API rate limiting
 - **CORS**: Configured for security
 - **Helmet**: Security headers
 - **Data encryption**: Sensitive data encryption
+- **Admin Protections**: Self-deletion prevention and audit trails
+- **Error Boundaries**: React error boundaries prevent app crashes
+- **Resource Cleanup**: Automatic cleanup of WebRTC and socket connections
+- **Graceful Degradation**: Safe fallbacks when features fail
 
 ## 📊 API Documentation
 
@@ -499,9 +523,19 @@ The application is optimized for:
 - `GET /api/messages` - Get user messages
 - `POST /api/messages` - Send message
 
+#### Video Consultation (WebRTC + Socket.IO)
+- `GET /api/video-consultation` - Access video consultation interface
+- Socket Events: `join-consultation-room`, `offer`, `answer`, `ice-candidate`, `end-call`, `chat-message`
+
 #### Admin
+- `GET /api/admin/stats` - System statistics and metrics
 - `GET /api/admin/doctors` - Admin doctor management
 - `POST /api/admin/doctors` - Add new doctor
+- `PUT /api/admin/doctors/:id` - Update doctor details
+- `DELETE /api/admin/doctors/:id` - Delete doctor
+- `GET /api/admin/users` - Admin user management
+- `PUT /api/admin/users/:id` - Update user details
+- `DELETE /api/admin/users/:id` - Delete user
 
 ## 🤝 Contributing
 

@@ -17,6 +17,11 @@ import adminRoutes from './routes/admin';
 import doctorRoutes from './routes/doctors';
 import uploadRoutes from './routes/uploads';
 import prescriptionRoutes from './routes/prescriptions';
+import availabilityRoutes from './modules/availability/routes';
+import { setupAvailabilitySocketHandlers } from './modules/availability/socket';
+import { NotificationService } from './modules/availability/service/notifications';
+import aiRoutes from './routes/ai';
+import paymentRoutes from './routes/payments';
 import { DoctorModel, UserModel, ProfileModel, AppointmentModel, MessageModel, PrescriptionModel, NotificationModel, PaymentModel } from './models';
 
 dotenv.config();
@@ -25,11 +30,11 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || ["http://localhost:3000", "http://localhost:5173"],
     methods: ["GET", "POST"]
   }
 });
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Validate required environment variables
 if (!process.env.MONGODB_URI) {
@@ -63,6 +68,14 @@ mongoose.connect(process.env.MONGODB_URI!)
     } else {
       console.log(`Database already has ${doctorCount} doctors`);
     }
+
+    // Initialize notification service
+    const notificationService = new NotificationService(io);
+    console.log('Notification service initialized');
+
+    // Setup availability socket handlers
+    setupAvailabilitySocketHandlers(io);
+    console.log('Availability socket handlers initialized');
   })
   .catch(err => {
     console.error('MongoDB connection error:', err);
@@ -75,7 +88,7 @@ async function seedDatabase() {
     // Sample doctors data
     const doctorsData = [
       {
-        name: 'Dr. Sarah Johnson',
+        name: 'Dr. Sarah Njeri',
         specialization: 'Cardiology',
         city: 'Nairobi',
         hospital: 'Kenyatta National Hospital',
@@ -87,7 +100,7 @@ async function seedDatabase() {
         availableSlots: ['09:00', '10:00', '14:00', '15:00', '16:00']
       },
       {
-        name: 'Dr. Michael Chen',
+        name: 'Dr. Michael Wanyoike',
         specialization: 'Dermatology',
         city: 'Nairobi',
         hospital: 'Nairobi Hospital',
@@ -116,16 +129,16 @@ async function seedDatabase() {
     const patientsData = [
       { name: 'Alice Wanjiku', email: 'alice.wanjiku@email.com', phone: '+254712345678', age: 28, gender: 'Female', location: 'Nairobi', medicalConditions: ['Hypertension'] },
       { name: 'Bob Kiprop', email: 'bob.kiprop@email.com', phone: '+254723456789', age: 35, gender: 'Male', location: 'Eldoret', medicalConditions: ['Diabetes'] },
-      { name: 'Test Patient 1', email: 'patient1@test.com', phone: '+254700000001', age: 30, gender: 'Male', location: 'Nairobi', medicalConditions: ['Flu'] },
-      { name: 'Test Patient 2', email: 'patient2@test.com', phone: '+254700000002', age: 25, gender: 'Female', location: 'Nairobi', medicalConditions: ['Headache'] }
+      { name: 'James Mwangi', email: 'jamesmwangi@test.com', phone: '+254700000001', age: 30, gender: 'Male', location: 'Nairobi', medicalConditions: ['Flu'] },
+      { name: 'Josephine Mokaya', email: 'josephine@test.com', phone: '+254700000002', age: 25, gender: 'Female', location: 'Nairobi', medicalConditions: ['Headache'] }
     ];
 
     // Create doctors
     for (const doctorData of doctorsData) {
       const placeholderUser = new UserModel({
-        clerkId: `doctor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: doctorData.name,
         email: `${doctorData.name.toLowerCase().replace(/\s+/g, '.')}@h-konnect.com`,
+        password: await bcrypt.hash('defaultpass123', 10),
         role: 'doctor'
       });
       await placeholderUser.save();
@@ -141,15 +154,15 @@ async function seedDatabase() {
     // Create patients
     for (const patientData of patientsData) {
       const patientUser = new UserModel({
-        clerkId: `patient_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: patientData.name,
         email: patientData.email,
+        password: await bcrypt.hash('defaultpass123', 10),
         role: 'patient'
       });
       await patientUser.save();
 
       const profile = new ProfileModel({
-        clerkId: patientUser.clerkId,
+        user: patientUser._id,
         name: patientData.name,
         phone: patientData.phone,
         role: 'patient',
@@ -165,15 +178,15 @@ async function seedDatabase() {
 
     // Create admin
     const adminUser = new UserModel({
-      clerkId: `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: 'Admin User',
       email: 'admin@healthkonnect.com',
+      password: await bcrypt.hash('admin123', 10),
       role: 'admin'
     });
     await adminUser.save();
 
     const adminProfile = new ProfileModel({
-      clerkId: adminUser.clerkId,
+      user: adminUser._id,
       name: 'Admin User',
       phone: '+254711111111',
       role: 'admin',
@@ -209,24 +222,6 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
       return res.status(401).json({ error: { message: 'Access token required' } });
     }
 
-    // Allow demo token for testing
-    if (token === 'demo-token') {
-      // Create or find demo user
-      let user = await User.findOne({ email: 'demo@example.com' });
-      if (!user) {
-        user = new User({
-          name: 'Demo User',
-          email: 'demo@example.com',
-          password: await bcrypt.hash('demo123', 10),
-          role: 'patient'
-        });
-        await user.save();
-        console.log('Created demo user');
-      }
-      req.user = user;
-      return next();
-    }
-
     // Verify the JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
@@ -257,6 +252,9 @@ app.use('/api/admin', authenticateToken, adminRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/uploads', authenticateToken, uploadRoutes);
 app.use('/api/prescriptions', authenticateToken, prescriptionRoutes);
+app.use('/api/availability', authenticateToken, availabilityRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/payments', authenticateToken, paymentRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
@@ -297,6 +295,50 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+  });
+
+  // Video consultation handlers
+  socket.on('join-consultation-room', (data: { appointmentId: string; userId: string; userType: string }) => {
+    const roomId = `consultation-${data.appointmentId}`;
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined consultation room ${roomId}`);
+
+    // Notify others in the room that someone joined
+    socket.to(roomId).emit('consultation-started');
+  });
+
+  socket.on('offer', (data: { offer: any; appointmentId: string }) => {
+    const roomId = `consultation-${data.appointmentId}`;
+    console.log(`Received offer for room ${roomId}`);
+    socket.to(roomId).emit('offer', data);
+  });
+
+  socket.on('answer', (data: { answer: any; appointmentId: string }) => {
+    const roomId = `consultation-${data.appointmentId}`;
+    console.log(`Received answer for room ${roomId}`);
+    socket.to(roomId).emit('answer', data);
+  });
+
+  socket.on('ice-candidate', (data: { candidate: any; appointmentId: string }) => {
+    const roomId = `consultation-${data.appointmentId}`;
+    console.log(`Received ICE candidate for room ${roomId}`);
+    socket.to(roomId).emit('ice-candidate', data);
+  });
+
+  socket.on('end-call', (data: { appointmentId: string }) => {
+    const roomId = `consultation-${data.appointmentId}`;
+    console.log(`Call ended for room ${roomId}`);
+    socket.to(roomId).emit('call-ended');
+  });
+
+  socket.on('chat-message', (data: { appointmentId: string; message: string; sender: string }) => {
+    const roomId = `consultation-${data.appointmentId}`;
+    console.log(`Chat message in room ${roomId} from ${data.sender}`);
+    socket.to(roomId).emit('chat-message', {
+      sender: data.sender,
+      message: data.message,
+      timestamp: new Date()
+    });
   });
 });
 

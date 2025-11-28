@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Download, Plus, Calendar, User as UserIcon, Stethoscope } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getUserPrescriptions, createPrescription, downloadPrescriptionPDF, setClerkToken } from '../lib/mongodb';
+import { getUserPrescriptions, createPrescription, downloadPrescriptionPDF, getUserAppointments } from '../lib/mongodb';
 import { Prescription, Appointment, User } from '../types';
+import { useAuthStore } from '../lib/store';
 import toast from 'react-hot-toast';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const Prescriptions: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuthStore();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,38 +25,26 @@ const Prescriptions: React.FC = () => {
   }]);
   const [notes, setNotes] = useState('');
 
-  // Check authentication - in real app this would come from auth context
-  const isLoggedIn = localStorage.getItem('demo_session') !== null || localStorage.getItem('auth_token') !== null;
-
-  const user = isLoggedIn ? {
-    id: 'demo-user-123',
-    fullName: 'Demo User',
-    firstName: 'Demo',
-    lastName: 'User',
-    role: 'patient' // Change to 'doctor' to test doctor functionality
-  } : null;
-
   // Redirect if not logged in
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       toast.error('Please log in to access prescriptions');
       navigate('/login');
       return;
     }
-  }, [isLoggedIn, navigate]);
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    if (user) {
+    if (user && isAuthenticated) {
       fetchPrescriptions();
       if (user.role === 'doctor') {
         fetchAppointments();
       }
     }
-  }, [user]);
+  }, [user, isAuthenticated]);
 
   const fetchPrescriptions = async () => {
     try {
-      setClerkToken('demo-token');
       const { data, error } = await getUserPrescriptions();
       if (error) throw error;
       setPrescriptions(data || []);
@@ -65,38 +57,41 @@ const Prescriptions: React.FC = () => {
   };
 
   const fetchAppointments = async () => {
-    // Mock appointments for doctor - in real app this would come from API
-    const mockUser: User = {
-      _id: 'mock-user',
-      clerkId: 'mock-clerk',
-      name: 'Mock User',
-      email: 'mock@example.com',
-      role: 'patient',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    setAppointments([
-      {
-        _id: 'mock-appointment-1',
-        doctor: { ...mockUser, name: 'Dr. Demo' },
-        patient: { ...mockUser, name: 'Demo Patient' },
-        date: new Date().toISOString(),
-        time: '10:00',
-        status: 'confirmed',
-        symptoms: 'Headache and fever',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ]);
+    try {
+      const { data, error } = await getUserAppointments();
+      if (error) throw error;
+      setAppointments(data || []);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      toast.error('Failed to load appointments');
+    }
   };
 
   const handleDownloadPDF = async (prescriptionId: string) => {
     try {
-      // In a real implementation, this would trigger a download
-      window.open(`http://localhost:5001/api/prescriptions/${prescriptionId}/pdf`, '_blank');
-      toast.success('Prescription PDF opened');
+      const response = await fetch(`${API_BASE_URL}/prescriptions/${prescriptionId}/pdf`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `prescription-${prescriptionId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success('Prescription PDF downloaded');
     } catch (error) {
+      console.error('Error downloading PDF:', error);
       toast.error('Failed to download prescription');
     }
   };
@@ -108,7 +103,6 @@ const Prescriptions: React.FC = () => {
     }
 
     try {
-      setClerkToken('demo-token');
       const prescriptionData = {
         appointmentId: selectedAppointment,
         medications: medications.filter(med => med.name.trim()),
@@ -156,8 +150,8 @@ const Prescriptions: React.FC = () => {
     }
   };
 
-  // Don't render anything if not logged in (redirect is happening)
-  if (!isLoggedIn) {
+  // Don't render anything if not authenticated (redirect is happening)
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

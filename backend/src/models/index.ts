@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { User, Profile, Doctor, Appointment, Message, Prescription, MedicalDocument, Notification, Payment, AuditLog } from '../types';
+import { User, Profile, Doctor, Appointment, Message, Prescription, MedicalDocument, Notification, Payment, AuditLog, DoctorAvailability, PhysicalAppointment, PaymentIntent, Subscription, PaymentTransaction } from '../types';
 
 // User Schema
 const userSchema = new mongoose.Schema<User>({
@@ -62,12 +62,14 @@ const messageSchema = new mongoose.Schema<Message>({
 const prescriptionSchema = new mongoose.Schema<Prescription>({
   doctor: { type: mongoose.Schema.Types.ObjectId as any, ref: 'User', required: true },
   patient: { type: mongoose.Schema.Types.ObjectId as any, ref: 'User', required: true },
+  appointment: { type: mongoose.Schema.Types.ObjectId as any, ref: 'Appointment' },
   meds: [{
     name: String,
     dosage: String,
     frequency: String,
     duration: String
   }],
+  notes: String,
   pdfUrl: String
 }, { timestamps: true });
 
@@ -89,10 +91,15 @@ const notificationSchema = new mongoose.Schema<Notification>({
 
 // Payment Schema
 const paymentSchema = new mongoose.Schema<Payment>({
-  mpesaTransactionId: String,
-  status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
+  user: { type: mongoose.Schema.Types.ObjectId as any, ref: 'User', required: true },
   amount: { type: Number, required: true },
-  reference: { type: String, required: true }
+  phoneNumber: { type: String, required: true },
+  type: { type: String, enum: ['one_time', 'subscription'], required: true },
+  feature: { type: String, required: true },
+  status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
+  transactionId: String,
+  description: String,
+  completedAt: Date
 }, { timestamps: true });
 
 // Audit Log Schema
@@ -104,6 +111,66 @@ const auditLogSchema = new mongoose.Schema<AuditLog>({
   after: mongoose.Schema.Types.Mixed,
   timestamp: { type: Date, default: Date.now }
 });
+
+// Doctor Availability Schema (for physical appointments)
+const doctorAvailabilitySchema = new mongoose.Schema<DoctorAvailability>({
+  doctor: { type: mongoose.Schema.Types.ObjectId as any, ref: 'User', required: true, unique: true },
+  status: { type: String, enum: ['available', 'busy', 'offline'], default: 'offline' },
+  currentHospital: String,
+  location: {
+    latitude: Number,
+    longitude: Number
+  },
+  lastUpdated: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+// Physical Appointment Schema (separate from teleconsultation appointments)
+const physicalAppointmentSchema = new mongoose.Schema<PhysicalAppointment>({
+  patient: { type: mongoose.Schema.Types.ObjectId as any, ref: 'User', required: true },
+  doctor: { type: mongoose.Schema.Types.ObjectId as any, ref: 'User', required: true },
+  hospital: { type: String, required: true },
+  date: { type: Date, required: true },
+  time: { type: String, required: true },
+  status: { type: String, enum: ['pending', 'confirmed', 'completed', 'cancelled', 'locked'], default: 'pending' },
+  symptoms: String,
+  notes: String,
+  paymentRef: String,
+  lockedUntil: Date,
+  consultationFee: { type: Number, required: true }
+}, { timestamps: true });
+
+// Payment Intent Schema (for IntaSend integration)
+const paymentIntentSchema = new mongoose.Schema<PaymentIntent>({
+  appointment: { type: mongoose.Schema.Types.ObjectId as any, ref: 'PhysicalAppointment', required: true },
+  amount: { type: Number, required: true },
+  currency: { type: String, default: 'KES' },
+  status: { type: String, enum: ['pending', 'processing', 'completed', 'failed', 'cancelled'], default: 'pending' },
+  intasendRef: String,
+  paymentUrl: String,
+  expiresAt: { type: Date, required: true }
+}, { timestamps: true });
+
+// Subscription Schema
+const subscriptionSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId as any, ref: 'User', required: true },
+  type: { type: String, enum: ['one_time', 'monthly'], required: true },
+  status: { type: String, enum: ['active', 'expired', 'cancelled'], default: 'active' },
+  amount: { type: Number, required: true },
+  expiresAt: { type: Date, required: true },
+  payment: { type: mongoose.Schema.Types.ObjectId as any, ref: 'Payment' }
+}, { timestamps: true });
+
+// Payment Transaction Schema
+const paymentTransactionSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId as any, ref: 'User', required: true },
+  intasendRef: { type: String, required: true, unique: true },
+  amount: { type: Number, required: true },
+  currency: { type: String, default: 'KES' },
+  status: { type: String, enum: ['pending', 'completed', 'failed', 'cancelled'], default: 'pending' },
+  type: { type: String, enum: ['one_time_search', 'monthly_subscription'], required: true },
+  metadata: mongoose.Schema.Types.Mixed,
+  processedAt: Date
+}, { timestamps: true });
 
 // Models
 export const UserModel = mongoose.model<User>('User', userSchema);
@@ -117,5 +184,14 @@ export const NotificationModel = mongoose.model<Notification>('Notification', no
 export const PaymentModel = mongoose.model<Payment>('Payment', paymentSchema);
 export const AuditLogModel = mongoose.model<AuditLog>('AuditLog', auditLogSchema);
 
+// Availability Module Models
+export const DoctorAvailabilityModel = mongoose.model<DoctorAvailability>('DoctorAvailability', doctorAvailabilitySchema);
+export const PhysicalAppointmentModel = mongoose.model<PhysicalAppointment>('PhysicalAppointment', physicalAppointmentSchema);
+export const PaymentIntentModel = mongoose.model<PaymentIntent>('PaymentIntent', paymentIntentSchema);
+
+// Subscription and Payment Models
+export const SubscriptionModel = mongoose.model<Subscription>('Subscription', subscriptionSchema);
+export const PaymentTransactionModel = mongoose.model<PaymentTransaction>('PaymentTransaction', paymentTransactionSchema);
+
 // Export types
-export { User, Profile, Doctor, Appointment, Message, Prescription, MedicalDocument, Notification, Payment, AuditLog };
+export { User, Profile, Doctor, Appointment, Message, Prescription, MedicalDocument, Notification, Payment, AuditLog, DoctorAvailability, PhysicalAppointment, PaymentIntent, Subscription, PaymentTransaction };

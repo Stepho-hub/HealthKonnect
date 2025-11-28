@@ -1,10 +1,37 @@
 import { Router } from 'express';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { UserModel, ProfileModel } from '../models';
 
 const router = Router();
+
+// Middleware to verify JWT
+const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: { message: 'Access token required' } });
+    }
+
+    // Verify the JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    // Find user in database
+    const user = await UserModel.findById(decoded.userId);
+    if (!user) {
+      return res.status(403).json({ error: { message: 'User not found' } });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(403).json({ error: { message: 'Authentication failed' } });
+  }
+};
 
 // Login route
 router.post('/login', async (req: Request, res: Response) => {
@@ -111,12 +138,8 @@ router.post('/signup', async (req: Request, res: Response) => {
 });
 
 // Get current user
-router.get('/me', async (req: Request, res: Response) => {
+router.get('/me', authenticateToken, async (req: Request, res: Response) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: { message: 'Not authenticated' } });
-    }
-
     res.json({
       data: {
         id: req.user._id,

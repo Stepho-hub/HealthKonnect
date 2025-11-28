@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const models_1 = require("../models");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -12,18 +13,8 @@ const seedDatabase = async () => {
         // Connect to MongoDB
         await mongoose_1.default.connect(process.env.MONGODB_URI);
         console.log('Connected to MongoDB');
-        // Clear existing data
-        await Promise.all([
-            models_1.DoctorModel.deleteMany({}),
-            models_1.UserModel.deleteMany({}),
-            models_1.ProfileModel.deleteMany({}),
-            models_1.AppointmentModel.deleteMany({}),
-            models_1.MessageModel.deleteMany({}),
-            models_1.PrescriptionModel.deleteMany({}),
-            models_1.NotificationModel.deleteMany({}),
-            models_1.PaymentModel.deleteMany({})
-        ]);
-        console.log('Cleared existing data');
+        // Note: Not clearing existing data to preserve current database content
+        console.log('Adding additional mock data without clearing existing data');
         // Sample doctors data
         const doctorsData = [
             {
@@ -135,18 +126,6 @@ const seedDatabase = async () => {
                 availableSlots: ['09:00', '10:00', '14:00', '15:00', '16:00']
             },
             {
-                name: 'Dr. John Mwangi',
-                specialization: 'Neurology',
-                city: 'Nairobi',
-                hospital: 'Nairobi Neurological Clinic',
-                rating: 4.9,
-                reviewCount: 112,
-                consultationFee: 7000,
-                latitude: -1.2864,
-                longitude: 36.8172,
-                availableSlots: ['08:00', '11:00', '13:00', '15:00']
-            },
-            {
                 name: 'Dr. Susan Kiprop',
                 specialization: 'Internal Medicine',
                 city: 'Nakuru',
@@ -157,18 +136,6 @@ const seedDatabase = async () => {
                 latitude: -0.3031,
                 longitude: 36.0800,
                 availableSlots: ['09:00', '10:00', '14:00', '16:00']
-            },
-            {
-                name: 'Dr. Robert Ochieng',
-                specialization: 'Surgery',
-                city: 'Mombasa',
-                hospital: 'Coast General Hospital',
-                rating: 4.7,
-                reviewCount: 134,
-                consultationFee: 6500,
-                latitude: -4.0435,
-                longitude: 39.6682,
-                availableSlots: ['08:00', '10:00', '14:00', '15:00']
             }
         ];
         // Sample patients data
@@ -182,43 +149,45 @@ const seedDatabase = async () => {
             { name: 'Grace Wairimu', email: 'grace.wairimu@email.com', phone: '+254778901234', age: 25, gender: 'Female', location: 'Nairobi', medicalConditions: [] },
             { name: 'Henry Mwangi', email: 'henry.mwangi@email.com', phone: '+254789012345', age: 45, gender: 'Male', location: 'Mombasa', medicalConditions: ['Arthritis'] },
             { name: 'Irene Kiprop', email: 'irene.kiprop@email.com', phone: '+254790123456', age: 33, gender: 'Female', location: 'Nairobi', medicalConditions: ['Thyroid issues'] },
-            { name: 'James Ochieng', email: 'james.ochieng@email.com', phone: '+254701234567', age: 27, gender: 'Male', location: 'Kisumu', medicalConditions: [] },
-            // Specific test patients
-            { name: 'Test Patient 1', email: 'patient1@test.com', phone: '+254700000001', age: 30, gender: 'Male', location: 'Nairobi', medicalConditions: ['Flu'] },
-            { name: 'Test Patient 2', email: 'patient2@test.com', phone: '+254700000002', age: 25, gender: 'Female', location: 'Nairobi', medicalConditions: ['Headache'] }
+            { name: 'James Ochieng', email: 'james.ochieng@email.com', phone: '+254701234567', age: 27, gender: 'Male', location: 'Kisumu', medicalConditions: [] }
         ];
         // Admin data
-        const adminData = { name: 'Admin User', email: 'admin@healthkonnect.com', phone: '+254711111111' };
+        const adminData = [
+            { name: 'Admin User 1', email: 'admin1@healthkonnect.com', phone: '+254711111111' },
+            { name: 'Admin User 2', email: 'admin2@healthkonnect.com', phone: '+254722222222' }
+        ];
         // Create doctors
         const createdDoctors = [];
         for (const doctorData of doctorsData) {
-            const placeholderUser = new models_1.UserModel({
-                clerkId: `doctor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            const hashedPassword = await bcryptjs_1.default.hash('doctor123', 10);
+            const doctorUser = new models_1.UserModel({
                 name: doctorData.name,
                 email: `${doctorData.name.toLowerCase().replace(/\s+/g, '.')}@h-konnect.com`,
+                password: hashedPassword,
                 role: 'doctor'
             });
-            await placeholderUser.save();
+            await doctorUser.save();
             const doctor = new models_1.DoctorModel({
-                user: placeholderUser._id,
+                user: doctorUser._id,
                 ...doctorData
             });
             await doctor.save();
-            createdDoctors.push({ user: placeholderUser, doctor });
+            createdDoctors.push({ user: doctorUser, doctor });
             console.log(`Created doctor: ${doctorData.name}`);
         }
         // Create patients
         const createdPatients = [];
         for (const patientData of patientsData) {
+            const hashedPassword = await bcryptjs_1.default.hash('patient123', 10);
             const patientUser = new models_1.UserModel({
-                clerkId: `patient_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 name: patientData.name,
                 email: patientData.email,
+                password: hashedPassword,
                 role: 'patient'
             });
             await patientUser.save();
             const profile = new models_1.ProfileModel({
-                clerkId: patientUser.clerkId,
+                user: patientUser._id,
                 name: patientData.name,
                 phone: patientData.phone,
                 role: 'patient',
@@ -231,26 +200,29 @@ const seedDatabase = async () => {
             createdPatients.push({ user: patientUser, profile });
             console.log(`Created patient: ${patientData.name}`);
         }
-        // Create admin
-        const adminUser = new models_1.UserModel({
-            clerkId: `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: adminData.name,
-            email: adminData.email,
-            role: 'admin'
-        });
-        await adminUser.save();
-        const adminProfile = new models_1.ProfileModel({
-            clerkId: adminUser.clerkId,
-            name: adminData.name,
-            phone: adminData.phone,
-            role: 'admin',
-            location: 'Nairobi',
-            age: 35,
-            gender: 'Male',
-            medicalConditions: []
-        });
-        await adminProfile.save();
-        console.log(`Created admin: ${adminData.name}`);
+        // Create admins
+        for (const admin of adminData) {
+            const hashedPassword = await bcryptjs_1.default.hash('admin123', 10);
+            const adminUser = new models_1.UserModel({
+                name: admin.name,
+                email: admin.email,
+                password: hashedPassword,
+                role: 'admin'
+            });
+            await adminUser.save();
+            const adminProfile = new models_1.ProfileModel({
+                user: adminUser._id,
+                name: admin.name,
+                phone: admin.phone,
+                role: 'admin',
+                location: 'Nairobi',
+                age: 35,
+                gender: 'Male',
+                medicalConditions: []
+            });
+            await adminProfile.save();
+            console.log(`Created admin: ${admin.name}`);
+        }
         // Create appointments
         const appointmentStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
         const symptoms = [
@@ -263,13 +235,23 @@ const seedDatabase = async () => {
             'Joint pain',
             'High blood pressure',
             'Diabetes checkup',
-            'Mental health consultation'
+            'Mental health consultation',
+            'Allergy symptoms',
+            'Dizziness',
+            'Fatigue',
+            'Nausea',
+            'Shortness of breath',
+            'Sore throat',
+            'Head injury',
+            'Burn injury',
+            'Eye irritation',
+            'Ear pain'
         ];
         const createdAppointments = [];
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 50; i++) {
             const patient = createdPatients[Math.floor(Math.random() * createdPatients.length)];
             const doctor = createdDoctors[Math.floor(Math.random() * createdDoctors.length)];
-            const daysFromNow = Math.floor(Math.random() * 30);
+            const daysFromNow = Math.floor(Math.random() * 60); // Extended to 60 days
             const date = new Date();
             date.setDate(date.getDate() + daysFromNow);
             const appointment = new models_1.AppointmentModel({
@@ -326,9 +308,9 @@ const seedDatabase = async () => {
             { name: 'Vitamin D3', dosage: '1000 IU', frequency: 'Once daily', duration: '30 days' },
             { name: 'Folic Acid', dosage: '5mg', frequency: 'Once daily', duration: '30 days' }
         ];
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 30; i++) {
             const appointment = createdAppointments[i];
-            const numMeds = Math.floor(Math.random() * 3) + 1;
+            const numMeds = Math.floor(Math.random() * 4) + 1;
             const meds = [];
             for (let j = 0; j < numMeds; j++) {
                 meds.push(medications[Math.floor(Math.random() * medications.length)]);
@@ -371,6 +353,7 @@ const seedDatabase = async () => {
         console.log('Seeding completed successfully!');
         console.log(`Created ${doctorsData.length} doctors`);
         console.log(`Created ${patientsData.length} patients`);
+        console.log(`Created ${adminData.length} admins`);
         console.log(`Created ${createdAppointments.length} appointments`);
         console.log('Created messages, prescriptions, notifications, and payments');
     }

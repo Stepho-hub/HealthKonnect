@@ -7,14 +7,14 @@ exports.AuditLogModel = exports.PaymentModel = exports.NotificationModel = expor
 const mongoose_1 = __importDefault(require("mongoose"));
 // User Schema
 const userSchema = new mongoose_1.default.Schema({
-    clerkId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
     role: { type: String, enum: ['patient', 'doctor', 'admin'], default: 'patient' }
 }, { timestamps: true });
 // Profile Schema
 const profileSchema = new mongoose_1.default.Schema({
-    clerkId: { type: String, required: true, unique: true },
+    user: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     name: { type: String, required: true },
     phone: String,
     role: { type: String, enum: ['patient', 'doctor', 'admin'], default: 'patient' },

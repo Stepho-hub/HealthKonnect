@@ -18,7 +18,6 @@ export default defineConfig({
           // Separate large dependencies into chunks
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['framer-motion', 'lucide-react'],
-          auth: ['@clerk/clerk-react'],
           utils: ['zustand', 'axios', 'date-fns'],
         },
       },

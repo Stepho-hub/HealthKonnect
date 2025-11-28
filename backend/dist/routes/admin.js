@@ -1,13 +1,17 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const models_1 = require("../models");
 const router = (0, express_1.Router)();
 // Get all doctors for admin
 router.get('/doctors', async (req, res) => {
     try {
         // Allow demo access or admin role
-        if (!req.user || (req.user.role !== 'admin' && req.user.clerkId !== 'demo-user-123')) {
+        if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'demo@example.com')) {
             return res.status(403).json({ error: { message: 'Admin access required' } });
         }
         const doctors = await models_1.DoctorModel.find({})
@@ -23,7 +27,7 @@ router.get('/doctors', async (req, res) => {
 // Add doctor
 router.post('/doctors', async (req, res) => {
     try {
-        if (!req.user || (req.user.role !== 'admin' && req.user.clerkId !== 'demo-user-123')) {
+        if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'demo@example.com')) {
             return res.status(403).json({ error: { message: 'Admin access required' } });
         }
         const { name, email, phone, address, specialization, licenseNumber, experience, hospital, bio, consultationFee, city } = req.body;
@@ -45,9 +49,9 @@ router.post('/doctors', async (req, res) => {
         }
         // Create a placeholder user for the doctor
         const placeholderUser = await models_1.UserModel.create({
-            clerkId: `placeholder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: name.trim(),
             email: email.trim(),
+            password: await bcryptjs_1.default.hash('defaultpass123', 10),
             role: 'doctor'
         });
         // Create doctor profile
@@ -65,7 +69,7 @@ router.post('/doctors', async (req, res) => {
         });
         // Create doctor profile details
         await models_1.ProfileModel.create({
-            clerkId: placeholderUser.clerkId,
+            user: placeholderUser._id,
             name: name.trim(),
             phone: phone?.trim() || '',
             location: address?.trim() || '',
@@ -86,7 +90,7 @@ router.post('/doctors', async (req, res) => {
 // Update doctor
 router.put('/doctors/:id', async (req, res) => {
     try {
-        if (!req.user || (req.user.role !== 'admin' && req.user.clerkId !== 'demo-user-123')) {
+        if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'demo@example.com')) {
             return res.status(403).json({ error: { message: 'Admin access required' } });
         }
         const { id } = req.params;
@@ -111,19 +115,19 @@ router.put('/doctors/:id', async (req, res) => {
 // Delete doctor
 router.delete('/doctors/:id', async (req, res) => {
     try {
-        if (!req.user || (req.user.role !== 'admin' && req.user.clerkId !== 'demo-user-123')) {
+        if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'demo@example.com')) {
             return res.status(403).json({ error: { message: 'Admin access required' } });
         }
         const { id } = req.params;
         // Find the doctor first to get the user ID
-        const doctor = await models_1.DoctorModel.findById(id).populate('user', 'clerkId');
+        const doctor = await models_1.DoctorModel.findById(id).populate('user', '_id');
         if (!doctor) {
             return res.status(404).json({ error: { message: 'Doctor not found' } });
         }
         // Delete the doctor profile
         await models_1.DoctorModel.findByIdAndDelete(id);
         // Delete the associated user profile
-        await models_1.ProfileModel.findOneAndDelete({ clerkId: doctor.user.clerkId });
+        await models_1.ProfileModel.findOneAndDelete({ user: doctor.user._id });
         // Note: We don't delete the User document as it might be referenced elsewhere
         // In a production system, you might want to mark it as inactive instead
         res.json({ message: 'Doctor deleted successfully' });

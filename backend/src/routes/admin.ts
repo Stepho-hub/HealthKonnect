@@ -1,13 +1,131 @@
 import { Router, Request, Response } from 'express';
-import { DoctorModel, UserModel, ProfileModel } from '../models';
+import bcrypt from 'bcryptjs';
+import { DoctorModel, UserModel, ProfileModel, AppointmentModel, PrescriptionModel } from '../models';
 
 const router = Router();
+
+// Get system statistics
+router.get('/stats', async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ error: { message: 'Admin access required' } });
+    }
+
+    // Get counts for all entities
+    const [totalUsers, totalDoctors, totalAppointments, totalPrescriptions] = await Promise.all([
+      UserModel.countDocuments(),
+      DoctorModel.countDocuments(),
+      AppointmentModel.countDocuments(),
+      PrescriptionModel.countDocuments()
+    ]);
+
+    // Get active users (users who have logged in recently - simplified)
+    const activeUsers = totalUsers; // For now, consider all users active
+
+    res.json({
+      data: {
+        totalUsers,
+        totalDoctors,
+        totalAppointments,
+        totalPrescriptions,
+        activeUsers,
+        systemHealth: 'operational'
+      }
+    });
+  } catch (error) {
+    console.error('Get stats error:', error);
+    res.status(500).json({ error: { message: 'Failed to get system statistics' } });
+  }
+});
+
+// Get all users for admin management
+router.get('/users', async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ error: { message: 'Admin access required' } });
+    }
+
+    const users = await UserModel.find({})
+      .select('name email role createdAt updatedAt')
+      .sort({ createdAt: -1 });
+
+    res.json({ data: users });
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({ error: { message: 'Failed to get users' } });
+  }
+});
+
+// Update user role/status
+router.put('/users/:id', async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ error: { message: 'Admin access required' } });
+    }
+
+    const { id } = req.params;
+    const { name, email, role } = req.body;
+
+    // Validate role
+    if (role && !['patient', 'doctor', 'admin'].includes(role)) {
+      return res.status(400).json({ error: { message: 'Invalid role' } });
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      id,
+      { name, email, role },
+      { new: true, runValidators: true }
+    ).select('name email role createdAt updatedAt');
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: { message: 'User not found' } });
+    }
+
+    res.json({ data: updatedUser });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ error: { message: 'Failed to update user' } });
+  }
+});
+
+// Delete user (admin cannot delete themselves)
+router.delete('/users/:id', async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ error: { message: 'Admin access required' } });
+    }
+
+    const { id } = req.params;
+
+    // Prevent admin from deleting themselves
+    if (req.user._id.toString() === id) {
+      return res.status(400).json({ error: { message: 'Cannot delete your own admin account' } });
+    }
+
+    // Check if user exists
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: { message: 'User not found' } });
+    }
+
+    // Delete associated profile if exists
+    await ProfileModel.findOneAndDelete({ user: id });
+
+    // Delete the user
+    await UserModel.findByIdAndDelete(id);
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: { message: 'Failed to delete user' } });
+  }
+});
 
 // Get all doctors for admin
 router.get('/doctors', async (req: Request, res: Response) => {
   try {
     // Allow demo access or admin role
-    if (!req.user || (req.user.role !== 'admin' && req.user.clerkId !== 'demo-user-123')) {
+    if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'demo@example.com')) {
       return res.status(403).json({ error: { message: 'Admin access required' } });
     }
 
@@ -25,7 +143,7 @@ router.get('/doctors', async (req: Request, res: Response) => {
 // Add doctor
 router.post('/doctors', async (req: Request, res: Response) => {
   try {
-    if (!req.user || (req.user.role !== 'admin' && req.user.clerkId !== 'demo-user-123')) {
+    if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'demo@example.com')) {
       return res.status(403).json({ error: { message: 'Admin access required' } });
     }
 
@@ -55,9 +173,9 @@ router.post('/doctors', async (req: Request, res: Response) => {
 
     // Create a placeholder user for the doctor
     const placeholderUser = await UserModel.create({
-      clerkId: `placeholder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: name.trim(),
       email: email.trim(),
+      password: await bcrypt.hash('defaultpass123', 10),
       role: 'doctor'
     });
 
@@ -77,7 +195,7 @@ router.post('/doctors', async (req: Request, res: Response) => {
 
     // Create doctor profile details
     await ProfileModel.create({
-      clerkId: placeholderUser.clerkId,
+      user: placeholderUser._id,
       name: name.trim(),
       phone: phone?.trim() || '',
       location: address?.trim() || '',
@@ -99,7 +217,7 @@ router.post('/doctors', async (req: Request, res: Response) => {
 // Update doctor
 router.put('/doctors/:id', async (req: Request, res: Response) => {
   try {
-    if (!req.user || (req.user.role !== 'admin' && req.user.clerkId !== 'demo-user-123')) {
+    if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'demo@example.com')) {
       return res.status(403).json({ error: { message: 'Admin access required' } });
     }
 
@@ -132,14 +250,14 @@ router.put('/doctors/:id', async (req: Request, res: Response) => {
 // Delete doctor
 router.delete('/doctors/:id', async (req: Request, res: Response) => {
   try {
-    if (!req.user || (req.user.role !== 'admin' && req.user.clerkId !== 'demo-user-123')) {
+    if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'demo@example.com')) {
       return res.status(403).json({ error: { message: 'Admin access required' } });
     }
 
     const { id } = req.params;
 
     // Find the doctor first to get the user ID
-    const doctor = await DoctorModel.findById(id).populate('user', 'clerkId');
+    const doctor = await DoctorModel.findById(id).populate('user', '_id');
     if (!doctor) {
       return res.status(404).json({ error: { message: 'Doctor not found' } });
     }
@@ -148,7 +266,7 @@ router.delete('/doctors/:id', async (req: Request, res: Response) => {
     await DoctorModel.findByIdAndDelete(id);
 
     // Delete the associated user profile
-    await ProfileModel.findOneAndDelete({ clerkId: (doctor.user as any).clerkId });
+    await ProfileModel.findOneAndDelete({ user: (doctor.user as any)._id });
 
     // Note: We don't delete the User document as it might be referenced elsewhere
     // In a production system, you might want to mark it as inactive instead
@@ -159,5 +277,6 @@ router.delete('/doctors/:id', async (req: Request, res: Response) => {
     res.status(500).json({ error: { message: 'Failed to delete doctor' } });
   }
 });
+
 
 export default router;

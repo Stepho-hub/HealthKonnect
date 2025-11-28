@@ -14,6 +14,6 @@ module.exports = {
     '!src/**/*.d.ts',
   ],
   moduleNameMapper: {
-    '^@healthbridge/(.*)$': '<rootDir>/../packages/$1/src/index.ts',
+    '^@healthkonnect/(.*)$': '<rootDir>/../packages/$1/src/index.ts',
   },
 };

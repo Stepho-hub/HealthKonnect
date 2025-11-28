@@ -88,6 +88,7 @@ export interface Prescription {
   _id: string;
   doctor: string;
   patient: string;
+  appointment?: string;
   meds: Array<{
     name: string;
     dosage: string;
@@ -119,10 +120,15 @@ export interface Notification {
 
 export interface Payment {
   _id: string;
-  mpesaTransactionId?: string;
-  status: 'pending' | 'completed' | 'failed';
+  user: string;
   amount: number;
-  reference: string;
+  phoneNumber: string;
+  type: 'one_time' | 'subscription';
+  feature: string;
+  status: 'pending' | 'completed' | 'failed';
+  transactionId?: string;
+  description?: string;
+  completedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -135,6 +141,15 @@ export interface AuditLog {
   before?: any;
   after?: any;
   timestamp: Date;
+}
+
+// Extend Express Request interface
+declare global {
+  namespace Express {
+    interface Request {
+      io?: any; // Socket.io instance
+    }
+  }
 }
 
 // Utility functions
@@ -163,3 +178,95 @@ export const validatePhone = (phone: string): boolean => {
 export const sanitizeInput = (input: string): string => {
   return input.replace(/[<>]/g, '');
 };
+
+// Availability Module Types
+export interface DoctorAvailability {
+  _id: string;
+  doctor: string;
+  status: 'available' | 'busy' | 'offline';
+  currentHospital?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  lastUpdated: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PhysicalAppointment {
+  _id: string;
+  patient: string;
+  doctor: string;
+  hospital: string;
+  date: Date;
+  time: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'locked';
+  symptoms?: string;
+  notes?: string;
+  paymentRef?: string;
+  lockedUntil?: Date;
+  consultationFee: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PaymentIntent {
+  _id: string;
+  appointment: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  intasendRef?: string;
+  paymentUrl?: string;
+  expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AvailabilitySearchResult {
+  doctor: {
+    _id: string;
+    name: string;
+    specialization: string;
+    rating: number;
+    reviewCount: number;
+    consultationFee: number;
+  };
+  hospital: string;
+  distance?: number;
+  nextAvailableTime?: string;
+  isAvailableNow: boolean;
+}
+
+// Subscription and Payment Types
+export interface Subscription {
+  _id: string;
+  user: string;
+  type: 'one_time' | 'monthly';
+  status: 'active' | 'expired' | 'cancelled';
+  expiresAt: Date;
+  paymentRef: string;
+  amount: number;
+  features: Array<{
+    name: string;
+    accessCount: number;
+    maxAccess: number | null;
+  }>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PaymentTransaction {
+  _id: string;
+  user: string;
+  intasendRef: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  type: 'one_time_search' | 'monthly_subscription';
+  metadata?: any;
+  processedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}

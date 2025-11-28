@@ -5,6 +5,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HealthKonnect</title>
+    <!-- IntaSend Payment Script - Only load in production -->
+    <script>
+      // Only load IntaSend script in production with valid API keys
+      if (window.location.hostname !== 'localhost' &&
+          window.location.hostname !== '127.0.0.1' &&
+          !window.location.hostname.includes('vite')) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.intasend.com/plugins/intasend-checkout-inline.js';
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    </script>
 </head>
 
 <body>
